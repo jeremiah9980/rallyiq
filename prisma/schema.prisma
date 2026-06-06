@@ -1,0 +1,425 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          String    @default("player") // admin, coach, player, parent
+  organizationId String?
+  organization  Organization? @relation(fields: [organizationId], references: [id])
+  accounts      Account[]
+  sessions      Session[]
+  coachProfile  Coach?
+  playerProfile Player?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Organization {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  logoUrl     String?
+  primaryColor String?
+  sport       String?
+  users       User[]
+  teams       Team[]
+  sponsors    Sponsor[]
+  campaigns   DonationCampaign[]
+  financials  FinancialReport[]
+  integrations IntegrationConfig[]
+  branding    BrandingTemplate[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Team {
+  id             String    @id @default(cuid())
+  name           String
+  sport          String
+  ageGroup       String?
+  season         String?
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  coaches        Coach[]
+  players        Player[]
+  schedules      Schedule[]
+  tournaments    Tournament[]
+  communications Communication[]
+  practices      Practice[]
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model Coach {
+  id           String    @id @default(cuid())
+  userId       String    @unique
+  user         User      @relation(fields: [userId], references: [id])
+  bio          String?
+  specialties  String?
+  teams        Team[]
+  practices    Practice[]
+  playerNotes  PlayerNote[]
+  scoutReports ScoutReport[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Player {
+  id                String    @id @default(cuid())
+  userId            String    @unique
+  user              User      @relation(fields: [userId], references: [id])
+  number            String?
+  position          String?
+  grade             String?
+  gpa               Float?
+  height            String?
+  weight            String?
+  teamId            String?
+  team              Team?     @relation(fields: [teamId], references: [id])
+  athleteProfile    AthleteProfile?
+  playerNotes       PlayerNote[]
+  developmentSummaries DevelopmentSummary[]
+  tryoutCandidates  TryoutCandidate[]
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
+model Practice {
+  id          String    @id @default(cuid())
+  title       String
+  date        DateTime
+  duration    Int       // minutes
+  location    String?
+  objectives  String?
+  notes       String?
+  teamId      String
+  team        Team      @relation(fields: [teamId], references: [id])
+  coachId     String?
+  coach       Coach?    @relation(fields: [coachId], references: [id])
+  practiceNotes PracticeNote[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model PracticeNote {
+  id         String   @id @default(cuid())
+  content    String
+  practiceId String
+  practice   Practice @relation(fields: [practiceId], references: [id])
+  createdAt  DateTime @default(now())
+}
+
+model PlayerNote {
+  id        String   @id @default(cuid())
+  content   String
+  category  String?  // technical, mental, physical, etc.
+  playerId  String
+  player    Player   @relation(fields: [playerId], references: [id])
+  coachId   String?
+  coach     Coach?   @relation(fields: [coachId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model DevelopmentSummary {
+  id          String   @id @default(cuid())
+  period      String   // Q1 2024, etc.
+  summary     String
+  strengths   String?
+  improvements String?
+  goals       String?
+  rating      Int?     // 1-10
+  playerId    String
+  player      Player   @relation(fields: [playerId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Schedule {
+  id        String   @id @default(cuid())
+  title     String
+  type      String   // game, practice, tournament, event
+  date      DateTime
+  time      String?
+  location  String?
+  opponent  String?
+  result    String?
+  notes     String?
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Tournament {
+  id          String    @id @default(cuid())
+  name        String
+  location    String?
+  startDate   DateTime
+  endDate     DateTime?
+  division    String?
+  placement   String?
+  teamId      String
+  team        Team      @relation(fields: [teamId], references: [id])
+  games       TournamentGame[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model TournamentGame {
+  id           String     @id @default(cuid())
+  round        String
+  opponent     String
+  ourScore     Int?
+  theirScore   Int?
+  result       String?
+  date         DateTime?
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id])
+  createdAt    DateTime   @default(now())
+}
+
+model Communication {
+  id        String   @id @default(cuid())
+  subject   String
+  body      String
+  type      String   // email, sms, notification
+  sentBy    String?
+  sentAt    DateTime @default(now())
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  threadId   String?
+  fromUserId String
+  toUserId   String?
+  content    String
+  read       Boolean  @default(false)
+  createdAt  DateTime @default(now())
+}
+
+model AthleteProfile {
+  id               String    @id @default(cuid())
+  bio              String?
+  achievements     String?
+  stats            String?   // JSON string
+  gpa              Float?
+  graduationYear   Int?
+  collegeInterest  String?
+  playerId         String    @unique
+  player           Player    @relation(fields: [playerId], references: [id])
+  videoHighlights  VideoHighlight[]
+  recruitingSnapshots RecruitingSnapshot[]
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+model VideoHighlight {
+  id               String        @id @default(cuid())
+  title            String
+  url              String
+  thumbnailUrl     String?
+  duration         Int?          // seconds
+  description      String?
+  athleteProfileId String
+  athleteProfile   AthleteProfile @relation(fields: [athleteProfileId], references: [id])
+  videoClips       VideoClip[]
+  createdAt        DateTime      @default(now())
+}
+
+model VideoClip {
+  id              String        @id @default(cuid())
+  title           String
+  url             String
+  thumbnailUrl    String?
+  startTime       Int?
+  endTime         Int?
+  tags            String?
+  highlightId     String?
+  highlight       VideoHighlight? @relation(fields: [highlightId], references: [id])
+  createdAt       DateTime      @default(now())
+}
+
+model RecruitingSnapshot {
+  id               String        @id @default(cuid())
+  college          String
+  division         String?
+  status           String        // interested, contacted, visited, committed
+  notes            String?
+  contactDate      DateTime?
+  athleteProfileId String
+  athleteProfile   AthleteProfile @relation(fields: [athleteProfileId], references: [id])
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+}
+
+model Sponsor {
+  id             String   @id @default(cuid())
+  name           String
+  logoUrl        String?
+  website        String?
+  tierLevel      String   // platinum, gold, silver, bronze
+  amount         Float?
+  contactName    String?
+  contactEmail   String?
+  active         Boolean  @default(true)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model DonationCampaign {
+  id             String     @id @default(cuid())
+  title          String
+  description    String?
+  goal           Float
+  raised         Float      @default(0)
+  startDate      DateTime
+  endDate        DateTime?
+  active         Boolean    @default(true)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  donations      Donation[]
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+}
+
+model Donation {
+  id         String           @id @default(cuid())
+  amount     Float
+  donorName  String?
+  donorEmail String?
+  message    String?
+  anonymous  Boolean          @default(false)
+  campaignId String
+  campaign   DonationCampaign @relation(fields: [campaignId], references: [id])
+  createdAt  DateTime         @default(now())
+}
+
+model ScoutReport {
+  id          String   @id @default(cuid())
+  subject     String
+  content     String
+  tags        String?
+  priority    String   @default("medium")
+  coachId     String?
+  coach       Coach?   @relation(fields: [coachId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Competitor {
+  id          String   @id @default(cuid())
+  name        String
+  sport       String
+  division    String?
+  wins        Int      @default(0)
+  losses      Int      @default(0)
+  notes       String?
+  lastScouted DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model TryoutCandidate {
+  id         String   @id @default(cuid())
+  name       String
+  position   String?
+  age        Int?
+  rating     Int?     // 1-10
+  notes      String?
+  status     String   @default("pending") // pending, invited, accepted, rejected
+  playerId   String?
+  player     Player?  @relation(fields: [playerId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model FinancialReport {
+  id             String   @id @default(cuid())
+  period         String
+  revenue        Float    @default(0)
+  expenses       Float    @default(0)
+  donations      Float    @default(0)
+  sponsorships   Float    @default(0)
+  notes          String?
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model IntegrationConfig {
+  id             String   @id @default(cuid())
+  service        String   // band, ncs, gamechanger, instagram, twitter, etc.
+  enabled        Boolean  @default(false)
+  config         String?  // JSON config
+  lastSynced     DateTime?
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model BrandingTemplate {
+  id             String   @id @default(cuid())
+  name           String
+  primaryColor   String?
+  secondaryColor String?
+  fontFamily     String?
+  logoUrl        String?
+  templateData   String?  // JSON
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
