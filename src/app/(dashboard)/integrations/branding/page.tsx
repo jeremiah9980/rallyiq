@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { ArrowLeft, Download, Save, Palette, Type, Image } from 'lucide-react'
+import { ArrowLeft, Download, Save, Palette, Type, Image as ImageIcon } from 'lucide-react'
 import Link from 'next/link'
 
 const templates = [
@@ -71,11 +71,11 @@ export default function BrandingPage() {
 
           {/* Logo */}
           <Card>
-            <CardHeader><CardTitle className="flex items-center gap-2"><Image className="h-5 w-5 text-blue-500" />Logo & Assets</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="flex items-center gap-2"><ImageIcon className="h-5 w-5 text-blue-500" />Logo & Assets</CardTitle></CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="rounded-xl border-2 border-dashed border-gray-200 p-8 text-center cursor-pointer hover:border-primary hover:bg-primary-50/30 transition-colors">
-                  <Image className="h-10 w-10 text-gray-300 mx-auto mb-2" />
+                  <ImageIcon className="h-10 w-10 text-gray-300 mx-auto mb-2" />
                   <p className="text-sm font-medium text-gray-600">Drop logo here</p>
                   <p className="text-xs text-gray-400">PNG, SVG up to 5MB</p>
                   <Button variant="outline" size="sm" className="mt-3">Browse Files</Button>

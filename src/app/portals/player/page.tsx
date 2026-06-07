@@ -80,7 +80,7 @@ export default function PlayerPortalPage() {
               <div className="space-y-3">
                 <div className="rounded-lg bg-green-50 p-3">
                   <p className="text-xs font-semibold text-green-600 uppercase mb-1">Coach Note</p>
-                  <p className="text-sm text-gray-700">"Excellent footwork improvement. Ready for tournament starter role."</p>
+                  <p className="text-sm text-gray-700">&quot;Excellent footwork improvement. Ready for tournament starter role.&quot;</p>
                 </div>
                 <div className="space-y-2">
                   {[

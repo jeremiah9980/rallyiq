@@ -66,7 +66,7 @@ export default function CampaignDetailPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-gray-900 text-sm">{d.name}</p>
-                    {d.message && <p className="text-xs text-gray-500 italic">"{d.message}"</p>}
+                    {d.message && <p className="text-xs text-gray-500 italic">&quot;{d.message}&quot;</p>}
                   </div>
                   <div className="text-right">
                     <p className="font-bold text-green-600">{formatCurrency(d.amount)}</p>

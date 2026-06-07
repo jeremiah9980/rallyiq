@@ -277,7 +277,7 @@ Tasks assigned: ${selected.tasks.length}`
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {fundraisers.length === 0 ? (
             <div style={{ textAlign: 'center', color: 'var(--text2)', fontSize: 13, padding: '40px 20px', background: 'var(--bg2)', border: '1px dashed var(--bg4)', borderRadius: 12 }}>
-              No fundraisers yet. Click "+ New" to create one.
+              No fundraisers yet. Click &quot;+ New&quot; to create one.
             </div>
           ) : (
             fundraisers.map(f => {

@@ -208,7 +208,7 @@ Notes: ${selected.notes || 'None'}`
         <div>
           {tournaments.length === 0 ? (
             <div style={{ textAlign: 'center', color: 'var(--text2)', fontSize: 13, padding: '40px 20px', background: 'var(--bg2)', border: '1px dashed var(--bg4)', borderRadius: 12 }}>
-              No tournaments yet. Click "+ New Tournament" to add one.
+              No tournaments yet. Click &quot;+ New Tournament&quot; to add one.
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
