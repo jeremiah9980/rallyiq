@@ -61,5 +61,5 @@ jobs:
         run: npm ci
 
       - name: Lint
-        run: ESLINT_USE_FLAT_CONFIG=false npx eslint src --ext .ts,.tsx
+        run: npx eslint "src/**/*.{ts,tsx}"
 
