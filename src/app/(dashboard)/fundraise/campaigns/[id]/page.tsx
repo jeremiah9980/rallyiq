@@ -1,4 +1,3 @@
-import { Header } from '@/components/layout/header'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -25,7 +24,7 @@ const donations = [
 export default function CampaignDetailPage() {
   return (
     <div>
-      <Header title={campaign.title} subtitle="Campaign Details" />
+      
       <div className="p-6 space-y-6">
         <div className="flex items-center gap-3">
           <Link href="/dashboard/fundraise/campaigns">

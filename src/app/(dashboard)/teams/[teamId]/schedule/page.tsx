@@ -1,4 +1,3 @@
-import { Header } from '@/components/layout/header'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -26,7 +25,7 @@ export default function SchedulePage() {
 
   return (
     <div>
-      <Header title="Team Schedule" subtitle="U16 Girls Varsity" />
+      
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex gap-4 text-sm">

@@ -1,4 +1,3 @@
-import { Header } from '@/components/layout/header'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -17,7 +16,7 @@ const teams = [
 export default function OrgTeamsPage() {
   return (
     <div>
-      <Header title="All Teams" subtitle="Organization-wide team management" />
+      
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <p className="text-sm text-gray-500"><span className="font-bold text-gray-900">{teams.length}</span> teams</p>

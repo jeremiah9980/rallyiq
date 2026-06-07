@@ -1,98 +1,112 @@
-import { Header } from '@/components/layout/header'
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Avatar } from '@/components/ui/avatar'
-import { Star, GraduationCap, Video, ChevronRight, Search } from 'lucide-react'
+'use client'
+
+import { useState } from 'react'
+import { useStore } from '@/lib/store'
 import Link from 'next/link'
 
-const athletes = [
-  { id: 'p1', name: 'Sophia Martinez', team: 'U16 Girls', position: 'Forward', grade: '11', gpa: 3.6, rating: 9.2, gradYear: 2026, highlights: 4, recruiting: 3, achievements: ['Top Scorer', 'MVP Spring 2025'] },
-  { id: 'p2', name: 'Liam Chen', team: 'U18 Boys', position: 'Midfielder', grade: '12', gpa: 3.9, rating: 8.9, gradYear: 2025, highlights: 7, recruiting: 5, achievements: ['Captain', 'Academic All-State'] },
-  { id: 'p3', name: 'Aisha Patel', team: 'U16 Girls', position: 'Goalkeeper', grade: '10', gpa: 3.8, rating: 8.7, gradYear: 2027, highlights: 3, recruiting: 1, achievements: ['Golden Glove'] },
-  { id: 'p4', name: 'Noah Williams', team: 'U14 Boys', position: 'Defender', grade: '9', gpa: 3.5, rating: 8.5, gradYear: 2028, highlights: 2, recruiting: 0, achievements: ['Best Defender'] },
-  { id: 'p5', name: 'Emma Davis', team: 'U16 Girls', position: 'Midfielder', grade: '11', gpa: 3.9, rating: 8.2, gradYear: 2026, highlights: 2, recruiting: 2, achievements: ['Academic Athlete'] },
-  { id: 'p6', name: 'Mia Johnson', team: 'U16 Girls', position: 'Defender', grade: '12', gpa: 3.4, rating: 7.9, gradYear: 2025, highlights: 1, recruiting: 1, achievements: [] },
-]
-
 export default function ProfilesPage() {
+  const { store } = useStore()
+  const { players, games, settings } = store
+  const [search, setSearch] = useState('')
+
+  const filtered = players.filter(p =>
+    p.name.toLowerCase().includes(search.toLowerCase()) ||
+    (p.pos || '').toLowerCase().includes(search.toLowerCase())
+  )
+
+  function calcStats(playerId: string) {
+    let ab = 0, h = 0, rbi = 0, hr = 0
+    for (const g of games) {
+      const ps = g.stats?.[playerId]
+      if (ps) { ab += ps.ab || 0; h += ps.h || 0; rbi += ps.rbi || 0; hr += ps.hr || 0 }
+    }
+    return { ab, h, rbi, hr, avg: ab > 0 ? (h / ab).toFixed(3).replace(/^0/, '') : '.000' }
+  }
+
   return (
     <div>
-      <Header title="RallyIQ Profiles" subtitle="Athlete profiles, highlights, and recruiting" />
-      <div className="p-6 space-y-6">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="relative flex-1 min-w-48">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input className="flex h-10 w-full rounded-lg border border-gray-300 bg-white pl-9 pr-3 text-sm focus:border-primary focus:outline-none" placeholder="Search athletes..." />
-          </div>
-          <select className="h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-primary focus:outline-none">
-            <option>All Teams</option>
-            <option>U16 Girls</option>
-            <option>U18 Boys</option>
-            <option>U14 Boys</option>
-          </select>
-          <select className="h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-primary focus:outline-none">
-            <option>All Positions</option>
-            <option>Forward</option>
-            <option>Midfielder</option>
-            <option>Defender</option>
-            <option>Goalkeeper</option>
-          </select>
-        </div>
+      <h1 style={{ color: 'var(--text)', fontSize: 22, marginBottom: 4 }}>Athletes</h1>
+      <p style={{ color: 'var(--text2)', fontSize: 13, marginBottom: 18 }}>
+        {settings.teamName} · {players.length} players
+      </p>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {athletes.map((a) => (
-            <Card key={a.id} className="hover:shadow-card-hover transition-shadow">
-              <CardContent className="pt-4">
-                <div className="flex items-start gap-3 mb-4">
-                  <Avatar name={a.name} size="lg" />
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-gray-900">{a.name}</h3>
-                    <p className="text-sm text-gray-500">{a.position} · {a.team}</p>
-                    <div className="flex items-center gap-1 mt-1">
-                      <Star className="h-3.5 w-3.5 text-yellow-400 fill-current" />
-                      <span className="text-sm font-bold text-primary">{a.rating}</span>
+      <div style={{ display: 'flex', gap: 10, marginBottom: 18 }}>
+        <input
+          type="text"
+          placeholder="Search athletes..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          style={{
+            flex: 1, background: 'var(--bg2)', border: '1px solid var(--bg4)',
+            color: 'var(--text)', padding: '9px 12px', borderRadius: 8, fontSize: 13, outline: 'none',
+          }}
+        />
+        <Link
+          href="/dashboard/teams/t1/roster"
+          style={{ background: 'var(--red)', color: '#fff', padding: '9px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: 'none' }}
+        >
+          Manage Roster →
+        </Link>
+      </div>
+
+      {filtered.length === 0 ? (
+        <div style={{ textAlign: 'center', color: 'var(--text2)', fontSize: 13, padding: '40px 20px', background: 'var(--bg2)', border: '1px dashed var(--bg4)', borderRadius: 12 }}>
+          {players.length === 0
+            ? 'No players yet. Add players in the Roster page.'
+            : 'No players match your search.'}
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 12 }}>
+          {filtered.map(p => {
+            const ss = calcStats(p.id)
+            return (
+              <div key={p.id} style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 12, padding: 18 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                  <div style={{
+                    width: 48, height: 48, borderRadius: '50%',
+                    background: 'linear-gradient(135deg, var(--red), var(--red3))',
+                    color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 16, fontWeight: 700, flexShrink: 0,
+                  }}>
+                    {p.jersey ? `#${p.jersey}` : p.name.slice(0, 2).toUpperCase()}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text)' }}>{p.name}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 1 }}>
+                      {p.pos || 'No position'}{p.grad ? ` · Class of ${p.grad}` : ''}
                     </div>
                   </div>
-                  <div className="text-right">
-                    <Badge variant="outline">Grade {a.grade}</Badge>
-                    <p className="text-xs text-gray-400 mt-1">Class of {a.gradYear}</p>
-                  </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 mb-3 text-center text-sm">
-                  <div className="rounded-lg bg-gray-50 p-2">
-                    <div className="font-bold text-gray-900">{a.gpa}</div>
-                    <div className="text-xs text-gray-500">GPA</div>
-                  </div>
-                  <div className="rounded-lg bg-blue-50 p-2">
-                    <div className="font-bold text-blue-600">{a.highlights}</div>
-                    <div className="text-xs text-gray-500">Videos</div>
-                  </div>
-                  <div className="rounded-lg bg-purple-50 p-2">
-                    <div className="font-bold text-purple-600">{a.recruiting}</div>
-                    <div className="text-xs text-gray-500">Schools</div>
-                  </div>
+                <div style={{ display: 'flex', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
+                  {p.bats && <span style={{ background: 'var(--bg4)', color: 'var(--text2)', padding: '2px 7px', borderRadius: 3, fontSize: 10 }}>Bats {p.bats}</span>}
+                  {p.throws && <span style={{ background: 'var(--bg4)', color: 'var(--text2)', padding: '2px 7px', borderRadius: 3, fontSize: 10 }}>Throws {p.throws}</span>}
                 </div>
 
-                {a.achievements.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mb-3">
-                    {a.achievements.map((ach) => (
-                      <Badge key={ach} variant="warning" className="text-xs">{ach}</Badge>
-                    ))}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
+                  {[
+                    { lbl: 'AVG', val: ss.avg },
+                    { lbl: 'AB', val: ss.ab },
+                    { lbl: 'RBI', val: ss.rbi },
+                    { lbl: 'HR', val: ss.hr },
+                  ].map(({ lbl, val }) => (
+                    <div key={lbl} style={{ background: 'var(--bg)', borderRadius: 6, padding: '6px 8px', textAlign: 'center' }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{val}</div>
+                      <div style={{ fontSize: 9, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '.4px' }}>{lbl}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {p.parent && (
+                  <div style={{ marginTop: 10, fontSize: 11, color: 'var(--text3)', borderTop: '1px solid var(--bg4)', paddingTop: 8 }}>
+                    Parent: {p.parent}{p.email ? ` · ${p.email}` : ''}
                   </div>
                 )}
-
-                <Link href={`/dashboard/profiles/${a.id}`}>
-                  <Button variant="outline" size="sm" className="w-full">
-                    View Profile <ChevronRight className="h-4 w-4 ml-auto" />
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-          ))}
+              </div>
+            )
+          })}
         </div>
-      </div>
+      )}
     </div>
   )
 }

@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { Header } from '@/components/layout/header'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -24,7 +23,7 @@ export default function CampaignsPage() {
 
   return (
     <div>
-      <Header title="Campaigns" subtitle="All fundraising campaigns" />
+      
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div className="text-sm text-gray-500">

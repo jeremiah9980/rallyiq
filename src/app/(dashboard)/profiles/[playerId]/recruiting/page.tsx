@@ -1,4 +1,3 @@
-import { Header } from '@/components/layout/header'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -22,7 +21,7 @@ const statusConfig: Record<string, { variant: 'success' | 'info' | 'warning' | '
 export default function RecruitingPage() {
   return (
     <div>
-      <Header title="Recruiting Snapshot" subtitle="Sophia Martinez · Class of 2026" />
+      
       <div className="p-6 space-y-6">
         <div className="flex items-center gap-3">
           <Link href="/dashboard/profiles/p1">

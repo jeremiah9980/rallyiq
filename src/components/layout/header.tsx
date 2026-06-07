@@ -1,44 +1,117 @@
 'use client'
 
-import { Bell, Search, Menu } from 'lucide-react'
+import { useTheme } from '@/lib/theme'
+import { Store } from '@/lib/store'
 
-interface HeaderProps {
-  title: string
-  subtitle?: string
-  onMenuClick?: () => void
+interface Props {
+  store: Store
+  onOpenKey: () => void
+  onOpenSettings: () => void
 }
 
-export function Header({ title, subtitle, onMenuClick }: HeaderProps) {
+export function Header({ store, onOpenKey, onOpenSettings }: Props) {
+  const { theme, toggleTheme } = useTheme()
+  const { teamName, season } = store.settings
+  const teamLabel = teamName + (season ? ' · ' + season : '')
+  const hasKey = !!store.apiKey
+
   return (
-    <header className="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6">
-      <div className="flex items-center gap-4">
-        <button
-          onClick={onMenuClick}
-          className="lg:hidden rounded-lg p-1.5 text-gray-400 hover:bg-gray-100"
-        >
-          <Menu className="h-5 w-5" />
-        </button>
-        <div>
-          <h1 className="text-xl font-semibold text-gray-900">{title}</h1>
-          {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
-        </div>
+    <header
+      style={{
+        background: 'var(--bg2)',
+        borderBottom: '3px solid var(--red)',
+        padding: '12px 20px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 14,
+        flexWrap: 'wrap',
+        position: 'sticky',
+        top: 0,
+        zIndex: 50,
+      }}
+    >
+      <div
+        style={{
+          fontSize: 18,
+          fontWeight: 700,
+          letterSpacing: '-0.3px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          color: 'var(--text)',
+        }}
+      >
+        ⚡ Rally<span style={{ color: 'var(--red3)' }}>IQ</span>
       </div>
-      <div className="flex items-center gap-3">
-        <div className="relative hidden sm:block">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search..."
-            className="h-9 w-56 rounded-lg border border-gray-200 bg-gray-50 pl-9 pr-4 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-          />
-        </div>
-        <button className="relative rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
-          <Bell className="h-5 w-5" />
-          <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-accent" />
+
+      <div
+        style={{
+          color: 'var(--text2)',
+          fontSize: 13,
+          paddingLeft: 12,
+          borderLeft: '1px solid var(--bg4)',
+          marginLeft: 4,
+        }}
+      >
+        {teamLabel || 'Setting up…'}
+      </div>
+
+      <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
+        <button
+          onClick={toggleTheme}
+          title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          style={{
+            background: 'transparent',
+            border: '1px solid var(--bg4)',
+            color: 'var(--text2)',
+            padding: '7px 12px',
+            borderRadius: 6,
+            fontSize: 14,
+            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 5,
+            transition: 'all .15s',
+          }}
+        >
+          {theme === 'dark' ? '☀️' : '🌙'}
         </button>
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">
-          JC
-        </div>
+
+        <button
+          onClick={onOpenSettings}
+          style={{
+            background: 'transparent',
+            border: '1px solid var(--bg4)',
+            color: 'var(--text2)',
+            padding: '7px 12px',
+            borderRadius: 6,
+            fontSize: 12,
+            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 5,
+          }}
+        >
+          ⚙️ Settings
+        </button>
+
+        <button
+          onClick={onOpenKey}
+          style={{
+            background: 'transparent',
+            border: hasKey ? '1px solid var(--green)' : '1px solid var(--bg4)',
+            color: hasKey ? 'var(--green)' : 'var(--text2)',
+            padding: '7px 12px',
+            borderRadius: 6,
+            fontSize: 12,
+            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 5,
+          }}
+        >
+          {hasKey ? '✓ Key set' : '🔑 Set Key'}
+        </button>
       </div>
     </header>
   )

@@ -1,4 +1,3 @@
-import { Header } from '@/components/layout/header'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -15,7 +14,7 @@ const reports = [
 export default function RosterIntelPage() {
   return (
     <div>
-      <Header title="Roster Intelligence" subtitle="In-depth analysis of your roster" />
+      
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <Button variant="outline" size="sm"><Filter className="h-4 w-4 mr-2" />Filter</Button>

@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { Header } from '@/components/layout/header'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -28,7 +27,7 @@ export default function CommunicationsPage() {
 
   return (
     <div>
-      <Header title="Communications" subtitle="U16 Girls Varsity — Parent & Player Messaging" />
+      
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <p className="text-sm text-gray-500">{messages.length} messages sent this season</p>

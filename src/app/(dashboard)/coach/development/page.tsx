@@ -1,4 +1,3 @@
-import { Header } from '@/components/layout/header'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -43,7 +42,7 @@ const summaries = [
 export default function DevelopmentPage() {
   return (
     <div>
-      <Header title="Development Summaries" subtitle="Quarterly player development tracking" />
+      
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
