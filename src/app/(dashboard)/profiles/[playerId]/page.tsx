@@ -1,4 +1,3 @@
-import { Header } from '@/components/layout/header'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -29,7 +28,7 @@ const athlete = {
 export default function ProfileDetailPage() {
   return (
     <div>
-      <Header title="Athlete Profile" subtitle={athlete.name} />
+      
       <div className="p-6 space-y-6">
         <div className="flex items-center gap-3">
           <Link href="/dashboard/profiles">

@@ -1,4 +1,3 @@
-import { Header } from '@/components/layout/header'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -25,7 +24,7 @@ const donations = [
 export default function CampaignDetailPage() {
   return (
     <div>
-      <Header title={campaign.title} subtitle="Campaign Details" />
+      
       <div className="p-6 space-y-6">
         <div className="flex items-center gap-3">
           <Link href="/dashboard/fundraise/campaigns">
@@ -67,7 +66,7 @@ export default function CampaignDetailPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-gray-900 text-sm">{d.name}</p>
-                    {d.message && <p className="text-xs text-gray-500 italic">"{d.message}"</p>}
+                    {d.message && <p className="text-xs text-gray-500 italic">&quot;{d.message}&quot;</p>}
                   </div>
                   <div className="text-right">
                     <p className="font-bold text-green-600">{formatCurrency(d.amount)}</p>

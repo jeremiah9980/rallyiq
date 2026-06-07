@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { Header } from '@/components/layout/header'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -35,7 +34,7 @@ export default function TryoutsPage() {
 
   return (
     <div>
-      <Header title="Tryout Pipeline" subtitle="Evaluate and manage tryout candidates" />
+      
       <div className="p-6 space-y-6">
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex gap-2">

@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { Header } from '@/components/layout/header'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -38,7 +37,7 @@ export default function NotesPage() {
 
   return (
     <div>
-      <Header title="Player Notes" subtitle="Track individual player observations" />
+      
       <div className="p-6 space-y-6">
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative flex-1 min-w-48">

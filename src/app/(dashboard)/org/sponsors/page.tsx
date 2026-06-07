@@ -1,4 +1,3 @@
-import { Header } from '@/components/layout/header'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -26,7 +25,7 @@ export default function OrgSponsorsPage() {
 
   return (
     <div>
-      <Header title="Sponsor Portal" subtitle={`${formatCurrency(total)} in active sponsorships`} />
+      
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex gap-3 text-sm">

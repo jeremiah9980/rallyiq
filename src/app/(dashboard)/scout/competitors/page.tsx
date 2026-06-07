@@ -1,4 +1,3 @@
-import { Header } from '@/components/layout/header'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -15,7 +14,7 @@ const competitors = [
 export default function CompetitorsPage() {
   return (
     <div>
-      <Header title="Competitor Monitoring" subtitle="Track and analyze opposing teams" />
+      
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex gap-4 text-sm text-gray-500">

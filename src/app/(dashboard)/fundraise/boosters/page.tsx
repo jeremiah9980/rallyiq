@@ -1,4 +1,3 @@
-import { Header } from '@/components/layout/header'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -18,7 +17,7 @@ const boosters = [
 export default function BoostersPage() {
   return (
     <div>
-      <Header title="Boosters" subtitle="Recurring supporters and major donors" />
+      
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div className="grid grid-cols-3 gap-4 text-center">

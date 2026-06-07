@@ -1,0 +1,56 @@
+{
+  "name": "RallyIQ",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:20",
+
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "20"
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+
+  "forwardPorts": [3000, 5555],
+  "portsAttributes": {
+    "3000": {
+      "label": "RallyIQ App",
+      "onAutoForward": "openBrowser"
+    },
+    "5555": {
+      "label": "Prisma Studio",
+      "onAutoForward": "notify"
+    }
+  },
+
+  "postCreateCommand": "npm install && npx prisma generate && npx prisma db push",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "bradlc.vscode-tailwindcss",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "prisma.prisma",
+        "ms-azuretools.vscode-docker",
+        "formulahendry.auto-rename-tag",
+        "christian-kohler.path-intellisense",
+        "dsznajder.es7-react-js-snippets"
+      ],
+      "settings": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true,
+        "editor.tabSize": 2,
+        "tailwindCSS.includeLanguages": {
+          "typescript": "javascript",
+          "typescriptreact": "javascript"
+        },
+        "typescript.preferences.importModuleSpecifier": "non-relative"
+      }
+    }
+  },
+
+  "remoteEnv": {
+    "DATABASE_URL": "file:./prisma/dev.db",
+    "NEXTAUTH_URL": "https://${localEnv:CODESPACE_NAME}-3000.app.github.dev",
+    "NEXTAUTH_SECRET": "${localEnv:NEXTAUTH_SECRET}"
+  }
+}

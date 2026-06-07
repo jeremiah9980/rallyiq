@@ -1,103 +1,231 @@
-import { Header } from '@/components/layout/header'
-import { StatCard } from '@/components/ui/stat-card'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Avatar } from '@/components/ui/avatar'
-import { Button } from '@/components/ui/button'
-import { Dumbbell, FileText, Star, Clock, Plus, ChevronRight } from 'lucide-react'
-import Link from 'next/link'
+'use client'
 
-const recentPractices = [
-  { id: 1, title: 'Passing & Possession Drill', team: 'U16 Girls', date: 'Jun 5', duration: 90, attendees: 18, rating: 4 },
-  { id: 2, title: 'Defensive Shape Work', team: 'U14 Boys', date: 'Jun 4', duration: 75, attendees: 14, rating: 5 },
-  { id: 3, title: 'Set Pieces & Corners', team: 'U18 Boys', date: 'Jun 3', duration: 60, attendees: 20, rating: 4 },
-]
+import { useState, useRef, useEffect } from 'react'
+import { useStore, uid, Thread } from '@/lib/store'
+import { useStream } from '@/hooks/useStream'
+import { useToast } from '@/components/ui/Toast'
 
-const recentNotes = [
-  { player: 'Sophia Martinez', content: 'Excellent footwork improvement. Ready for tournament starter role.', category: 'technical', date: 'Jun 5' },
-  { player: 'Liam Chen', content: 'Needs work on defensive positioning. Schedule 1-on-1 session.', category: 'tactical', date: 'Jun 4' },
-  { player: 'Emma Davis', content: 'Mental toughness under pressure showing great signs. Keep encouraging.', category: 'mental', date: 'Jun 3' },
-]
+function renderMarkdown(text: string): string {
+  try {
+    if (typeof window !== 'undefined' && (window as typeof window & { marked?: { parse: (s: string) => string } }).marked) {
+      return (window as typeof window & { marked: { parse: (s: string) => string } }).marked.parse(text)
+    }
+  } catch {}
+  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br/>')
+}
 
-export default function CoachPage() {
+const COACH_SYS = 'You are a knowledgeable travel softball coach and player development expert with deep experience in youth athletics. Practical, specific, actionable advice. Format with markdown. When asked about a skill, include drills and coaching cues. Keep responses focused.'
+
+export default function CoachAIPage() {
+  const { store, update } = useStore()
+  const { streamClaude } = useStream(store.apiKey)
+  const { toast } = useToast()
+  const [input, setInput] = useState('')
+  const [streaming, setStreaming] = useState(false)
+  const [streamingText, setStreamingText] = useState('')
+  const msgsRef = useRef<HTMLDivElement>(null)
+
+  const activeThread = store.threads.find(t => t.id === store.activeThreadId)
+
+  useEffect(() => {
+    if (msgsRef.current) {
+      msgsRef.current.scrollTop = msgsRef.current.scrollHeight
+    }
+  }, [activeThread?.messages, streamingText])
+
+  function newThread() {
+    const t: Thread = { id: uid(), title: 'New chat', messages: [], created: Date.now() }
+    update((prev) => ({
+      ...prev,
+      threads: [t, ...prev.threads],
+      activeThreadId: t.id,
+    }))
+  }
+
+  function selectThread(id: string) {
+    update((prev) => ({ ...prev, activeThreadId: id }))
+  }
+
+  function deleteThread(id: string) {
+    if (!confirm('Delete this conversation?')) return
+    update((prev) => ({
+      ...prev,
+      threads: prev.threads.filter(t => t.id !== id),
+      activeThreadId: prev.activeThreadId === id ? (prev.threads.find(t => t.id !== id)?.id ?? null) : prev.activeThreadId,
+    }))
+  }
+
+  async function sendChat() {
+    if (!store.apiKey) {
+      toast('Set your API key first', 'warn')
+      return
+    }
+    const text = input.trim()
+    if (!text) return
+    setInput('')
+
+    let threadId = store.activeThreadId
+    if (!threadId) {
+      const t: Thread = { id: uid(), title: text.slice(0, 40) + (text.length > 40 ? '...' : ''), messages: [], created: Date.now() }
+      update((prev) => ({ ...prev, threads: [t, ...prev.threads], activeThreadId: t.id }))
+      threadId = t.id
+    }
+
+    update((prev) => {
+      const threads = prev.threads.map(t => {
+        if (t.id !== threadId) return t
+        const updated = { ...t, messages: [...t.messages, { role: 'user' as const, content: text }] }
+        if (updated.title === 'New chat') updated.title = text.slice(0, 40) + (text.length > 40 ? '...' : '')
+        return updated
+      })
+      return { ...prev, threads }
+    })
+
+    setStreaming(true)
+    setStreamingText('')
+
+    const currentThread = store.threads.find(t => t.id === threadId)
+    const messages = [...(currentThread?.messages || []), { role: 'user' as const, content: text }]
+
+    await streamClaude({
+      system: COACH_SYS,
+      max_tokens: 1500,
+      messages,
+      onText: (_, full) => setStreamingText(full),
+      onDone: (full) => {
+        setStreaming(false)
+        setStreamingText('')
+        update((prev) => ({
+          ...prev,
+          threads: prev.threads.map(t => {
+            if (t.id !== threadId) return t
+            return { ...t, messages: [...t.messages, { role: 'user' as const, content: text }, { role: 'assistant' as const, content: full }] }
+          }),
+        }))
+      },
+      onError: (e) => {
+        setStreaming(false)
+        setStreamingText('')
+        toast('Error: ' + e.message, 'error')
+      },
+    })
+  }
+
   return (
     <div>
-      <Header title="RallyIQ Coach" subtitle="Your coaching dashboard" />
-      <div className="p-6 space-y-6">
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <StatCard title="Practices This Month" value="12" change="3 this week" changeType="positive" icon={Dumbbell} iconColor="bg-blue-500" />
-          <StatCard title="Player Notes" value="47" change="+8 this week" changeType="positive" icon={FileText} iconColor="bg-purple-500" />
-          <StatCard title="Dev Summaries" value="18" change="Q2 complete" changeType="neutral" icon={Star} iconColor="bg-yellow-500" />
-          <StatCard title="Avg Practice Duration" value="78 min" change="On target" changeType="neutral" icon={Clock} iconColor="bg-green-500" />
+      <h1 style={{ color: 'var(--text)', fontSize: 22, marginBottom: 4 }}>Coach AI</h1>
+      <p style={{ color: 'var(--text2)', fontSize: 13, marginBottom: 18 }}>
+        Ask anything — mechanics, drills, strategy, parent dynamics, player development
+      </p>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '240px 1fr', gap: 14, minHeight: 500 }}>
+        {/* Thread sidebar */}
+        <div style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 10, padding: 12, display: 'flex', flexDirection: 'column', gap: 8, overflowY: 'auto' }}>
+          <button
+            onClick={newThread}
+            style={{ background: 'var(--red)', color: '#fff', padding: '8px 12px', borderRadius: 7, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: 'none', marginBottom: 6 }}
+          >
+            + New chat
+          </button>
+          {store.threads.length === 0 ? (
+            <div style={{ color: 'var(--text3)', fontSize: 12, padding: 8, textAlign: 'center' }}>No chats yet</div>
+          ) : (
+            store.threads.map(t => (
+              <div
+                key={t.id}
+                onClick={() => selectThread(t.id)}
+                style={{
+                  padding: '10px 12px',
+                  borderRadius: 7,
+                  background: t.id === store.activeThreadId ? 'var(--red)' : 'var(--bg)',
+                  border: `1px solid ${t.id === store.activeThreadId ? 'var(--red)' : 'var(--bg4)'}`,
+                  cursor: 'pointer',
+                  fontSize: 13,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  color: t.id === store.activeThreadId ? '#fff' : 'var(--text)',
+                }}
+              >
+                <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</span>
+                <button
+                  onClick={(e) => { e.stopPropagation(); deleteThread(t.id) }}
+                  style={{ opacity: 0.5, fontSize: 14, lineHeight: 1, background: 'none', border: 'none', cursor: 'pointer', color: 'inherit' }}
+                >
+                  ×
+                </button>
+              </div>
+            ))
+          )}
         </div>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Recent Practices</CardTitle>
-                <Link href="/dashboard/coach/practices">
-                  <Button variant="ghost" size="sm">View all <ChevronRight className="h-4 w-4 ml-1" /></Button>
-                </Link>
+        {/* Chat main */}
+        <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
+          <div
+            ref={msgsRef}
+            style={{ flex: 1, padding: 18, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 14, minHeight: 400, maxHeight: '60vh' }}
+          >
+            {!activeThread ? (
+              <div className="msg assistant">
+                Hi Coach! Click <strong>+ New chat</strong> to start a conversation.
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {recentPractices.map((p) => (
-                  <div key={p.id} className="flex items-center gap-4 rounded-lg border border-gray-100 p-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
-                      <Dumbbell className="h-5 w-5 text-blue-500" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-gray-900 text-sm">{p.title}</p>
-                      <p className="text-xs text-gray-500">{p.team} · {p.date} · {p.duration}min · {p.attendees} players</p>
-                    </div>
-                    <div className="flex text-yellow-400">
-                      {Array.from({ length: p.rating }).map((_, i) => (
-                        <Star key={i} className="h-3.5 w-3.5 fill-current" />
-                      ))}
-                    </div>
-                  </div>
+            ) : activeThread.messages.length === 0 ? (
+              <div className="msg assistant">What can I help you with, Coach?</div>
+            ) : (
+              <>
+                {activeThread.messages.map((m, i) => (
+                  <div
+                    key={i}
+                    className={`msg ${m.role}`}
+                    dangerouslySetInnerHTML={{ __html: m.role === 'assistant' ? renderMarkdown(m.content) : m.content.replace(/</g, '&lt;').replace(/>/g, '&gt;') }}
+                  />
                 ))}
-              </div>
-              <Link href="/dashboard/coach/practices">
-                <Button variant="outline" size="sm" className="w-full mt-4">
-                  <Plus className="h-4 w-4 mr-2" />
-                  New Practice Plan
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
+                {streaming && (
+                  <div
+                    className="msg assistant"
+                    dangerouslySetInnerHTML={{ __html: renderMarkdown(streamingText) + '<span class="cursor"></span>' }}
+                  />
+                )}
+              </>
+            )}
+          </div>
 
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Recent Player Notes</CardTitle>
-                <Link href="/dashboard/coach/notes">
-                  <Button variant="ghost" size="sm">View all <ChevronRight className="h-4 w-4 ml-1" /></Button>
-                </Link>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {recentNotes.map((n) => (
-                  <div key={n.player} className="rounded-lg border border-gray-100 p-3">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Avatar name={n.player} size="sm" />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900">{n.player}</p>
-                        <p className="text-xs text-gray-400">{n.date}</p>
-                      </div>
-                      <Badge variant={n.category === 'technical' ? 'default' : n.category === 'mental' ? 'info' : 'warning'}>
-                        {n.category}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-gray-600">{n.content}</p>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          <div style={{ borderTop: '1px solid var(--bg4)', padding: 12, display: 'flex', gap: 8, background: 'var(--bg2)' }}>
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && !streaming && sendChat()}
+              placeholder="Ask a coaching question..."
+              disabled={streaming}
+              style={{
+                flex: 1,
+                background: 'var(--bg)',
+                border: '1px solid var(--bg4)',
+                color: 'var(--text)',
+                padding: '9px 12px',
+                borderRadius: 7,
+                fontSize: 14,
+                outline: 'none',
+              }}
+            />
+            <button
+              onClick={sendChat}
+              disabled={streaming}
+              style={{
+                background: streaming ? 'var(--bg4)' : 'var(--red)',
+                color: '#fff',
+                padding: '10px 18px',
+                borderRadius: 7,
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: streaming ? 'not-allowed' : 'pointer',
+                border: 'none',
+              }}
+            >
+              Send
+            </button>
+          </div>
         </div>
       </div>
     </div>

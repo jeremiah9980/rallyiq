@@ -1,8 +1,6 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import Script from 'next/script'
 import './globals.css'
-
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 
 export const metadata: Metadata = {
   title: 'RallyIQ — Sports Management Platform',
@@ -11,8 +9,14 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body className={`${inter.variable} font-sans antialiased`}>{children}</body>
+    <html lang="en" className="dark">
+      <head>
+        <Script
+          src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js"
+          strategy="beforeInteractive"
+        />
+      </head>
+      <body>{children}</body>
     </html>
   )
 }

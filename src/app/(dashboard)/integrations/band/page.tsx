@@ -1,4 +1,3 @@
-import { Header } from '@/components/layout/header'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -20,7 +19,7 @@ const recentPosts = [
 export default function BandPage() {
   return (
     <div>
-      <Header title="Band Integration" subtitle="Team communication channel sync" />
+      
       <div className="p-6 space-y-6">
         <div className="flex items-center gap-3">
           <Link href="/dashboard/integrations"><Button variant="outline" size="sm"><ArrowLeft className="h-4 w-4 mr-2" />Back</Button></Link>

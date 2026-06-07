@@ -1,4 +1,3 @@
-import { Header } from '@/components/layout/header'
 import { StatCard } from '@/components/ui/stat-card'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -26,7 +25,7 @@ export default function FinancialsPage() {
 
   return (
     <div>
-      <Header title="Financial Reports" subtitle="Organization financial overview" />
+      
       <div className="p-6 space-y-6">
         <div className="flex justify-end">
           <Button variant="outline"><Download className="h-4 w-4 mr-2" />Export PDF</Button>

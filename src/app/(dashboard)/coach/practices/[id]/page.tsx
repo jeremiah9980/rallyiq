@@ -1,4 +1,3 @@
-import { Header } from '@/components/layout/header'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -39,7 +38,7 @@ const practiceData = {
 export default function PracticeDetailPage() {
   return (
     <div>
-      <Header title={practiceData.title} subtitle={`${practiceData.team} · ${practiceData.date}`} />
+      
       <div className="p-6 space-y-6">
         <div className="flex items-center gap-3">
           <Link href="/dashboard/coach/practices">
