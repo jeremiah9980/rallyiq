@@ -39,6 +39,19 @@ RallyIQ is a role-based sports management system with seven core modules:
 
 ---
 
+## Installation Guides
+
+Step-by-step guides for each environment:
+
+| Guide | Description |
+|-------|-------------|
+| [Local Development](docs/install-local.md) | Run on your Mac, Windows, or Linux machine |
+| [Vercel](docs/install-vercel.md) | Deploy to Vercel (recommended for production) |
+| [GitHub Actions CI/CD](docs/install-github-actions.md) | Configure automated lint, build, and deploy |
+| [VPS / Self-Hosted](docs/install-vps.md) | Deploy to EC2, DigitalOcean, Hetzner, etc. |
+
+---
+
 ## Local Development Setup
 
 ### Prerequisites
