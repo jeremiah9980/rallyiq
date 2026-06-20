@@ -39,6 +39,18 @@ RallyIQ is a role-based sports management system with seven core modules:
 
 ---
 
+## Documentation
+
+Full documentation is available in the [`docs/`](docs/index.md) directory.
+
+| Section | Description |
+|---------|-------------|
+| [RallyIQ Docs](docs/rallyiq/overview.md) | Platform overview, user guide, API reference, data model, AI features, portals |
+| [Rally-Org Docs](docs/rallyorg/overview.md) | Admin guide, integrations, financial reporting |
+| [Installation Guides](docs/index.md) | Local, Vercel, GitHub Actions, VPS deployment |
+
+---
+
 ## Installation Guides
 
 Step-by-step guides for each environment:
