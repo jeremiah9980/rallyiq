@@ -152,33 +152,34 @@ From the **Composer** tab:
 
 NCS Fastpitch is one of the largest sanctioning bodies for travel softball tournaments. The integration helps teams discover tournaments and import their roster.
 
-> **No public API:** NCS Fastpitch does not publish a developer API or API keys. RallyIQ's NCS integration is a **manual import** — you find your team on the NCS site, copy the roster table, and paste it into RallyIQ to parse and import.
+> **No public API:** NCS Fastpitch does not publish a developer API or API keys. RallyIQ instead reads the public NCS portal ([playncs.com](https://www.playncs.com/fastpitch)) directly — you search for your team by name and RallyIQ pulls the roster off the team's NCS page automatically. A manual copy/paste fallback is still available if a team can't be found.
 
 ### What RallyIQ Does with NCS
 
 | Feature | Description |
 |---------|------------|
-| Find Team | Opens the NCS Fastpitch site in a new tab so you can locate your team's roster page |
-| Roster Paste & Parse | Paste the copied roster table; RallyIQ parses names, jersey numbers, positions, bats/throws, and grad year |
+| Search NCS | Searches the public NCS portal by team name, state, and season and lists matching teams (with division, location, and W-L-T record) |
+| One-click Roster Import | Pulls the selected team's roster (player names and jersey numbers) straight off its NCS page — no copy/paste |
+| Manual Paste Fallback | If a team can't be found, paste the roster table and RallyIQ parses names, jersey numbers, positions, bats/throws, and grad year |
 | Preview & Edit | Review and correct parsed rows before anything is saved |
 | Import to Roster | Adds new players to your team roster, skipping any names that already exist |
-| Standings | Static display of regional standings (sample data — not a live feed) |
 
 ### Importing a Roster from NCS
 
 **Location:** `/integrations/ncs`
 
-1. **Step 1 — Find your team.** Type your team name in the search box and click **Open NCS**. This opens [ncsfastpitch.com](https://www.ncsfastpitch.com) in a new tab. Search for your team there and open its roster page.
-2. **Step 2 — Copy and paste the roster.** On the NCS roster page, select the roster table and copy it (Ctrl+C / Cmd+C). Paste it into the **Step 2** textarea in RallyIQ. Both tab-separated (typical when copying an HTML table) and plain space-separated text are supported.
-3. Click **Parse Roster**. RallyIQ extracts each player's name, jersey number, position, bats/throws, and graduation year where present.
-4. **Step 3 — Review.** A preview table appears with every parsed field editable. Fix any misread values, or click the trash icon to drop a row you don't want imported.
-5. Click **Import N Players to Roster**. New players are added to your team roster (`Teams → Roster`). Players whose name already matches someone on your roster are skipped automatically to avoid duplicates.
+1. **Step 1 — Search the NCS portal.** Type your team name (optionally pick a state and season) and click **Search NCS**. RallyIQ queries the public NCS portal and lists matching teams with their division, location, and record.
+2. **Step 2 — Pick your team.** Find your team in the results and click **Import Roster**. RallyIQ fetches that team's roster directly from its NCS page. Each team name links to the team's NCS page if you want to verify it first.
+3. **Step 3 — Review.** A preview table appears with every parsed field editable. NCS rosters provide each player's name and jersey number; fill in position, bats/throws, and grad year as desired, or click the trash icon to drop a row you don't want imported.
+4. Click **Import N Players to Roster**. New players are added to your team roster (`Teams → Roster`). Players whose name already matches someone on your roster are skipped automatically to avoid duplicates.
 
-### Parsing Notes
+#### Manual Paste Fallback
+
+If your team doesn't appear in NCS search, click **Can't find your team? Paste the roster table manually** to paste a roster table copied from any source. RallyIQ parses it the same way and feeds it into the Step 3 review table.
 
 - If the pasted text has a header row (e.g. `Name`, `Jersey`, `Pos`, `Bats`, `Throws`, `Grad`), RallyIQ uses those column labels to map fields.
 - If there's no header, RallyIQ falls back to heuristics: a 1–3 digit number is treated as the jersey, a recognized position code (`P`, `C`, `1B`, `SS`, `OF`, etc.) is treated as position, a 4-digit year starting with `20` is treated as grad year, and whatever remains is treated as the player's name.
-- Always check the preview table before importing — pasted formatting varies by browser and by how the NCS page renders its roster table.
+- Always check the preview table before importing.
 
 ---
 
