@@ -45,51 +45,50 @@ For initial setup or credential rotation:
 
 ## GameChanger Integration
 
-**Tab:** `/integrations` → GameChanger tab
+**Tab:** `/integrations` → GameChanger tab · **Location:** `/integrations/gamechanger`
 
 GameChanger is the most widely used stats and scorekeeping platform in youth baseball and softball.
 
-### What RallyIQ Syncs from GameChanger
+> **No public API:** Like NCS Fastpitch, GameChanger does not publish a developer API for arbitrary teams. RallyIQ's GameChanger integration verifies access to your team's GameChanger page, then uses a **manual paste-and-parse** workflow — the same pattern as the NCS integration — to cross-reference your roster and pull in stats.
 
-| Data | Direction | Frequency |
-|------|-----------|-----------|
-| Player roster | GameChanger → RallyIQ | Manual or scheduled |
-| Game stats | GameChanger → RallyIQ | Manual sync |
-| Schedule | GameChanger → RallyIQ | Manual sync |
+### What RallyIQ Does with GameChanger
 
-### Setup
+| Feature | Description |
+|---------|------------|
+| Verify Team Access | Paste your team's `web.gc.com` URL; RallyIQ validates the link format, extracts the team ID, and opens the team page so you can confirm access |
+| Roster Cross-Reference | Paste the GameChanger roster table; RallyIQ matches each row to a player on your RallyIQ roster by name (falling back to jersey number) and saves their GameChanger player ID |
+| Stat Import | Paste a box score from a completed game; RallyIQ matches each stat line to a player (by GameChanger ID, then name, then jersey) and adds it to the Season Tracker |
+| Portal Updates | Once imported, stats flow through the same `games`/`players` data used by Roster, Athlete Profiles, and anywhere season stats are displayed — no separate sync step needed |
 
-1. Log in to your GameChanger account at [web.gc.com](https://web.gc.com)
-2. Navigate to **Team Settings** → **API Access** (if available on your plan)
-3. Copy your API key and team ID
-4. In RallyIQ, go to **Integrations → Settings**
-5. Enter `GAMECHANGER_API_KEY` and `GAMECHANGER_TEAM_ID`
-6. Toggle GameChanger to **Enabled**
+### Step 1 — Verify Team Access
 
-### Syncing Roster
+**Location:** `/integrations/gamechanger`
 
-1. Go to the **GameChanger** tab in Integrations
-2. Click **Sync Now**
-3. The roster preview shows each player with a sync status indicator:
-   - ✅ Green = synced
-   - ⚠️ Yellow = found in GC but not in RallyIQ
-   - ❌ Red = mismatch or error
+1. Paste your team's GameChanger URL, e.g. `https://web.gc.com/teams/<teamId>/<season-slug>`
+2. Click **Verify & Open Team**. RallyIQ checks the URL matches the `web.gc.com/teams/...` pattern, extracts the team ID, opens the page in a new tab, and marks the integration **Access Verified**
 
-### Syncing Stats
+### Step 2 — Cross-Reference Roster & Collect GameChanger IDs
 
-After games, stats are entered in GameChanger by scorekeepers. Pull them into RallyIQ:
+1. On the GameChanger team roster page, select and copy the roster table
+2. Paste it into the **Step 2** textarea and click **Parse Roster**
+3. Review the match table — each row shows whether it matched a RallyIQ player by name or jersey number. Unmatched rows can be assigned manually via the dropdown
+4. Enter or confirm each player's GameChanger ID, then click **Save GameChanger IDs**. Matched IDs are stored on the player record (`Player.gcId`) for future stat matching
 
-1. Go to the **GameChanger** tab
-2. Click **Sync Stats**
-3. Stats populate the Season Tracker in Teams
+### Step 3 — Import Game Stats
+
+1. Enter the opponent and date for the game
+2. Copy the box score / player stats table from GameChanger and paste it into the **Step 3** textarea
+3. Click **Parse Stats**. Rows are matched to players using their linked GameChanger ID first, then name, then jersey number
+4. Click **Import Stats to Season**. A new game is added to the team's Season Tracker with `source: 'gc'`, and stats immediately appear anywhere season stats are shown (Roster, Athlete Profiles)
 
 ### Troubleshooting
 
 | Issue | Fix |
 |-------|-----|
-| "Connection failed" | Verify API key in Settings |
-| Players not appearing | Check that roster is published in GameChanger |
-| Stats not syncing | Ensure the game is marked complete in GameChanger |
+| "That doesn't look like a web.gc.com team URL" | Copy the URL directly from your browser's address bar while on the team's GameChanger page |
+| Roster rows show "No match" | The player name in GameChanger doesn't match RallyIQ exactly and has no matching jersey number — pick the player manually from the dropdown |
+| Stat rows show "No match" | Link the player's GameChanger ID in Step 2 first, or make sure the name/jersey in the pasted box score matches your roster |
+| Stats not appearing on Roster/Profiles | Confirm the import succeeded (a toast confirms how many player lines were imported) — both pages read live from the same season data |
 
 ---
 

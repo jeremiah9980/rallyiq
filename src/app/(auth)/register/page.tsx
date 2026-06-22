@@ -13,14 +13,25 @@ import { Select } from '@/components/ui/select'
 export default function RegisterPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'coach', orgName: '' })
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
-    // Simulate registration
-    await new Promise((r) => setTimeout(r, 1000))
-    router.push('/login')
+    setError('')
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(form),
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      setError(data.error || 'Registration failed')
+      setLoading(false)
+      return
+    }
+    router.push('/login?registered=1')
   }
 
   return (
@@ -37,6 +48,11 @@ export default function RegisterPage() {
           <p className="mt-1 text-gray-500">Get started with RallyIQ today</p>
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+            {error && (
+              <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-600">
+                {error}
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2 space-y-1">
                 <label className="text-sm font-medium text-gray-700">Full Name</label>

@@ -16,6 +16,7 @@ export interface Player {
   parent?: string
   email?: string
   phone?: string
+  gcId?: string
   stats?: {
     ab: number; h: number; rbi: number; r: number; bb: number; k: number; hr: number; avg: number
   }
@@ -46,6 +47,7 @@ export interface Game {
   notes: string
   stats: Record<string, GameStats>
   playerStats?: Record<string, GameStats>
+  source?: 'manual' | 'gc'
 }
 
 export interface Plan {
@@ -158,6 +160,11 @@ export interface Store {
     teamName: string
     defaultAge: string
     season: string
+    gcTeamUrl?: string
+    gcTeamId?: string
+    gcVerified?: boolean
+    gcLastVerified?: string
+    gcLastSync?: string
   }
   players: Player[]
   games: Game[]
