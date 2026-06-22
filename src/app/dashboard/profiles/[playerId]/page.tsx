@@ -1,34 +1,36 @@
+'use client'
+
+import { useParams } from 'next/navigation'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Avatar } from '@/components/ui/avatar'
-import { Star, GraduationCap, Video, School, ArrowLeft, Share2, Download } from 'lucide-react'
+import { Video, School, ArrowLeft, Share2, Download, Link2 } from 'lucide-react'
 import Link from 'next/link'
-
-const athlete = {
-  id: 'p1',
-  name: 'Sophia Martinez',
-  team: 'U16 Girls Varsity',
-  position: 'Forward',
-  number: '10',
-  grade: '11',
-  gpa: 3.6,
-  graduationYear: 2026,
-  height: "5'5\"",
-  weight: '122 lbs',
-  rating: 9.2,
-  bio: 'Dynamic forward with exceptional speed and technical ability. Two-time team MVP with outstanding work rate and natural goal-scoring instinct.',
-  achievements: ['Top Scorer Spring 2025', 'Team MVP 2x', 'Spring Invitational All-Tournament'],
-  stats: { goals: 18, assists: 9, gamesPlayed: 22, shotsOnTarget: 48, passingAccuracy: 84 },
-  videos: 4,
-  recruitingSchools: 3,
-  collegeInterest: 'Division I Soccer',
-}
+import { useStore, calcStats, fmt } from '@/lib/store'
 
 export default function ProfileDetailPage() {
+  const { playerId } = useParams<{ playerId: string }>()
+  const { store } = useStore()
+  const { players, games } = store
+
+  const player = players.find((p) => p.id === playerId)
+
+  if (!player) {
+    return (
+      <div className="p-6">
+        <Link href="/dashboard/profiles">
+          <Button variant="outline" size="sm"><ArrowLeft className="h-4 w-4 mr-2" />Back</Button>
+        </Link>
+        <p className="text-gray-500 mt-4">Player not found.</p>
+      </div>
+    )
+  }
+
+  const ss = calcStats(player.id, games)
+
   return (
     <div>
-      
       <div className="p-6 space-y-6">
         <div className="flex items-center gap-3">
           <Link href="/dashboard/profiles">
@@ -44,32 +46,28 @@ export default function ProfileDetailPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-start gap-6 flex-wrap">
-              <Avatar name={athlete.name} size="xl" />
+              <Avatar name={player.name} size="xl" />
               <div className="flex-1 min-w-48">
                 <div className="flex items-center gap-3 flex-wrap">
-                  <h2 className="text-2xl font-bold text-gray-900">{athlete.name}</h2>
-                  <Badge variant="outline">#{athlete.number}</Badge>
-                  <div className="flex items-center gap-1">
-                    <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                    <span className="font-bold text-primary">{athlete.rating}</span>
-                  </div>
+                  <h2 className="text-2xl font-bold text-gray-900">{player.name}</h2>
+                  {player.jersey && <Badge variant="outline">#{player.jersey}</Badge>}
+                  {player.gcId ? (
+                    <Badge variant="success"><Link2 className="h-3.5 w-3.5 mr-1" />GameChanger Linked</Badge>
+                  ) : (
+                    <Badge variant="warning">Not linked to GameChanger</Badge>
+                  )}
                 </div>
-                <p className="text-gray-500 mt-1">{athlete.position} · {athlete.team}</p>
-                <p className="text-sm text-gray-600 mt-3 max-w-xl">{athlete.bio}</p>
-                <div className="flex flex-wrap gap-2 mt-3">
-                  {athlete.achievements.map((a) => (
-                    <Badge key={a} variant="warning">{a}</Badge>
-                  ))}
-                </div>
+                <p className="text-gray-500 mt-1">{player.pos || 'No position'}{player.grad ? ` · Class of ${player.grad}` : ''}</p>
+                {player.notes && <p className="text-sm text-gray-600 mt-3 max-w-xl">{player.notes}</p>}
               </div>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 {[
-                  { label: 'Grade', value: athlete.grade },
-                  { label: 'GPA', value: athlete.gpa },
-                  { label: 'Class', value: athlete.graduationYear },
-                  { label: 'Height', value: athlete.height },
-                  { label: 'Weight', value: athlete.weight },
-                  { label: 'Goals', value: athlete.stats.goals },
+                  { label: 'Bats', value: player.bats || '—' },
+                  { label: 'Throws', value: player.throws || '—' },
+                  { label: 'Games', value: ss.g },
+                  { label: 'AVG', value: fmt(ss.avg) },
+                  { label: 'OPS', value: fmt(ss.ops) },
+                  { label: 'HR', value: ss.hr },
                 ].map((item) => (
                   <div key={item.label} className="rounded-lg bg-gray-50 px-3 py-2 text-center">
                     <div className="font-bold text-gray-900">{item.value}</div>
@@ -86,24 +84,30 @@ export default function ProfileDetailPage() {
           <Card>
             <CardHeader><CardTitle>Season Stats</CardTitle></CardHeader>
             <CardContent>
-              <div className="space-y-3">
+              <div className="grid grid-cols-3 gap-3 text-sm">
                 {[
-                  { label: 'Goals', value: athlete.stats.goals, max: 30 },
-                  { label: 'Assists', value: athlete.stats.assists, max: 20 },
-                  { label: 'Games Played', value: athlete.stats.gamesPlayed, max: 25 },
-                  { label: 'Shots on Target', value: athlete.stats.shotsOnTarget, max: 80 },
+                  { label: 'AB', value: ss.ab },
+                  { label: 'H', value: ss.h },
+                  { label: 'AVG', value: fmt(ss.avg) },
+                  { label: 'RBI', value: ss.rbi },
+                  { label: 'R', value: ss.r },
+                  { label: 'HR', value: ss.hr },
+                  { label: 'BB', value: ss.bb },
+                  { label: 'K', value: ss.k },
+                  { label: 'SB', value: ss.sb },
+                  { label: 'OBP', value: fmt(ss.obp) },
+                  { label: 'SLG', value: fmt(ss.slg) },
+                  { label: 'OPS', value: fmt(ss.ops) },
                 ].map((s) => (
-                  <div key={s.label}>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-gray-600">{s.label}</span>
-                      <span className="font-bold text-gray-900">{s.value}</span>
-                    </div>
-                    <div className="h-1.5 w-full rounded-full bg-gray-100">
-                      <div className="h-1.5 rounded-full bg-primary" style={{ width: `${(s.value / s.max) * 100}%` }} />
-                    </div>
+                  <div key={s.label} className="rounded-lg bg-gray-50 px-2 py-2 text-center">
+                    <div className="font-bold text-gray-900">{s.value}</div>
+                    <div className="text-xs text-gray-500">{s.label}</div>
                   </div>
                 ))}
               </div>
+              {ss.g === 0 && (
+                <p className="text-xs text-gray-400 mt-3">No games recorded yet — import stats from GameChanger or add a game manually.</p>
+              )}
             </CardContent>
           </Card>
 
@@ -112,7 +116,7 @@ export default function ProfileDetailPage() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Video Highlights</CardTitle>
-                <Link href={`/dashboard/profiles/${athlete.id}/videos`}>
+                <Link href={`/dashboard/profiles/${player.id}/videos`}>
                   <Button variant="ghost" size="sm">View all</Button>
                 </Link>
               </div>
@@ -136,19 +140,12 @@ export default function ProfileDetailPage() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Recruiting</CardTitle>
-                <Link href={`/dashboard/profiles/${athlete.id}/recruiting`}>
+                <Link href={`/dashboard/profiles/${player.id}/recruiting`}>
                   <Button variant="ghost" size="sm">View all</Button>
                 </Link>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="mb-3">
-                <p className="text-sm text-gray-500 mb-1">College Interest</p>
-                <div className="flex items-center gap-2">
-                  <GraduationCap className="h-5 w-5 text-primary" />
-                  <span className="text-sm font-medium text-gray-800">{athlete.collegeInterest}</span>
-                </div>
-              </div>
               <div className="space-y-2">
                 {[
                   { school: 'Stanford University', div: 'D1', status: 'contacted' },

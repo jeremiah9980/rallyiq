@@ -1,3 +1,6 @@
+'use client'
+
+import { useParams } from 'next/navigation'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -19,12 +22,13 @@ const statusConfig: Record<string, { variant: 'success' | 'info' | 'warning' | '
 }
 
 export default function RecruitingPage() {
+  const { playerId } = useParams<{ playerId: string }>()
   return (
     <div>
-      
+
       <div className="p-6 space-y-6">
         <div className="flex items-center gap-3">
-          <Link href="/dashboard/profiles/p1">
+          <Link href={`/dashboard/profiles/${playerId}`}>
             <Button variant="outline" size="sm"><ArrowLeft className="h-4 w-4 mr-2" />Back</Button>
           </Link>
           <Button className="ml-auto"><Plus className="h-4 w-4 mr-2" />Add School</Button>

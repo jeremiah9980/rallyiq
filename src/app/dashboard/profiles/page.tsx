@@ -60,7 +60,7 @@ export default function ProfilesPage() {
           {filtered.map(p => {
             const ss = calcStats(p.id)
             return (
-              <div key={p.id} style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 12, padding: 18 }}>
+              <Link key={p.id} href={`/dashboard/profiles/${p.id}`} style={{ display: 'block', background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 12, padding: 18, textDecoration: 'none' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
                   <div style={{
                     width: 48, height: 48, borderRadius: '50%',
@@ -102,7 +102,7 @@ export default function ProfilesPage() {
                     Parent: {p.parent}{p.email ? ` · ${p.email}` : ''}
                   </div>
                 )}
-              </div>
+              </Link>
             )
           })}
         </div>
