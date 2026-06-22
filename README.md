@@ -191,6 +191,88 @@ DATABASE_URL="file:./prisma/dev.db" npx prisma db seed
 
 ---
 
+## Pull Latest & Redeploy Locally
+
+When new changes are merged to `main` on GitHub, use these steps to update your
+local copy and restart the app for testing.
+
+### 1. Stop the running app
+
+Press `Ctrl+C` in the terminal running the dev/prod server. If it's running in
+the background:
+
+```bash
+lsof -ti:3000 | xargs kill        # frees port 3000
+# or, if started with PM2:
+pm2 stop rallyiq
+```
+
+### 2. Pull the latest from GitHub
+
+```bash
+git checkout main
+git pull origin main
+```
+
+If the pull aborts with *"Your local changes would be overwritten by merge"*
+(commonly `package-lock.json` or `.DS_Store`), you have uncommitted local
+changes blocking the update. Inspect them first:
+
+```bash
+git status
+git diff package.json          # check before discarding anything meaningful
+```
+
+- **Discard** unwanted local changes (e.g. auto-generated lockfile, `.DS_Store`), then pull again:
+  ```bash
+  git checkout -- package-lock.json .DS_Store
+  git pull origin main
+  ```
+- **Keep** local edits you care about by stashing them instead:
+  ```bash
+  git stash
+  git pull origin main
+  git stash pop                 # reapply your edits; resolve any conflicts
+  ```
+
+### 3. Refresh dependencies
+
+```bash
+npm install --legacy-peer-deps
+```
+
+### 4. Apply database changes (only if the schema changed)
+
+If the update modified `prisma/schema.prisma`, sync your local database:
+
+```bash
+npx prisma generate
+npx prisma db push
+```
+
+Skip this step for code-only changes.
+
+### 5. Restart the app
+
+```bash
+npm run dev                     # development (hot reload) — recommended for testing
+# or, production-like:
+npm run build && npm run start
+```
+
+Then open [http://localhost:3000](http://localhost:3000) to test.
+
+### Quick reference
+
+```bash
+cd ~/repos/rallyiq
+git checkout main && git pull origin main
+npm install --legacy-peer-deps
+npm run dev
+```
+
+---
+
 ## Cloud Deployment
 
 ### Deploying to Vercel (Recommended)
