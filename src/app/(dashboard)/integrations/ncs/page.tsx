@@ -7,15 +7,28 @@ import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/ui/Toast'
 import { useStore, uid, Player } from '@/lib/store'
 import { parseRosterPaste, ParsedPlayer } from '@/lib/ncsImport'
-import { RefreshCw, CheckCircle, ArrowLeft, Search, ClipboardPaste, Trash2 } from 'lucide-react'
+import { RefreshCw, CheckCircle, ArrowLeft, Search, ClipboardPaste, Trash2, Download, Loader2, MapPin } from 'lucide-react'
 import Link from 'next/link'
 
-const standings = [
-  { rank: 1, team: 'Eastside FC', wins: 9, losses: 2, points: 28 },
-  { rank: 2, team: 'Riverside SC (Us)', wins: 8, losses: 2, points: 25, us: true },
-  { rank: 3, team: 'Metro United', wins: 8, losses: 3, points: 24 },
-  { rank: 4, team: 'Northside SC', wins: 7, losses: 4, points: 21 },
-  { rank: 5, team: 'Valley SC', wins: 6, losses: 5, points: 18 },
+interface NcsTeamResult {
+  id: string
+  name: string
+  division: string
+  location: string
+  record: string
+  url: string
+}
+
+interface NcsSeason {
+  id: string
+  label: string
+}
+
+const US_STATES = [
+  'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA',
+  'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
+  'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT',
+  'VA', 'WA', 'WV', 'WI', 'WY',
 ]
 
 export default function NCSPage() {
@@ -23,17 +36,75 @@ export default function NCSPage() {
   const { toast } = useToast()
 
   const [teamQuery, setTeamQuery] = useState('')
+  const [state, setState] = useState('')
+  const [seasonId, setSeasonId] = useState('')
+  const [seasons, setSeasons] = useState<NcsSeason[]>([])
+
+  const [searching, setSearching] = useState(false)
+  const [results, setResults] = useState<NcsTeamResult[] | null>(null)
+  const [loadingRosterId, setLoadingRosterId] = useState<string | null>(null)
+
+  const [showPaste, setShowPaste] = useState(false)
   const [pasteText, setPasteText] = useState('')
+
   const [parsed, setParsed] = useState<ParsedPlayer[] | null>(null)
+  const [importSource, setImportSource] = useState<string>('')
   const [lastSync, setLastSync] = useState<string | null>(null)
 
-  function findTeam() {
-    if (!teamQuery.trim()) {
-      toast('Enter a team name to search', 'warn')
+  async function searchTeams() {
+    if (!teamQuery.trim() && !state) {
+      toast('Enter a team name or pick a state to search NCS', 'warn')
       return
     }
-    window.open('https://www.ncsfastpitch.com/', '_blank', 'noopener,noreferrer')
-    toast('Opened NCS Fastpitch — search for your team, open its roster page, then copy the roster table')
+    setSearching(true)
+    setResults(null)
+    try {
+      const params = new URLSearchParams()
+      if (teamQuery.trim()) params.set('teamName', teamQuery.trim())
+      if (state) params.set('state', state)
+      if (seasonId) params.set('seasonId', seasonId)
+      const res = await fetch(`/api/integrations/ncs/search?${params.toString()}`)
+      const data = await res.json()
+      if (!res.ok) {
+        toast(data.error || 'NCS search failed', 'error')
+        return
+      }
+      if (Array.isArray(data.seasons) && data.seasons.length > 0) setSeasons(data.seasons)
+      setResults(data.teams || [])
+      if ((data.teams || []).length === 0) {
+        toast('No teams found on NCS for that search — try a different name or state', 'warn')
+      } else {
+        toast(`Found ${data.teams.length} team${data.teams.length === 1 ? '' : 's'} on NCS`)
+      }
+    } catch {
+      toast('Could not reach NCS. Please try again.', 'error')
+    } finally {
+      setSearching(false)
+    }
+  }
+
+  async function importFromTeam(team: NcsTeamResult) {
+    setLoadingRosterId(team.id)
+    try {
+      const res = await fetch(`/api/integrations/ncs/roster?teamId=${encodeURIComponent(team.id)}`)
+      const data = await res.json()
+      if (!res.ok) {
+        toast(data.error || 'Could not load that roster from NCS', 'error')
+        return
+      }
+      const players: ParsedPlayer[] = data.players || []
+      if (players.length === 0) {
+        toast(data.error || 'No players found on that NCS roster', 'warn')
+        return
+      }
+      setParsed(players)
+      setImportSource(team.name)
+      toast(`Loaded ${players.length} player${players.length === 1 ? '' : 's'} from ${team.name} — review below before importing`)
+    } catch {
+      toast('Could not reach NCS. Please try again.', 'error')
+    } finally {
+      setLoadingRosterId(null)
+    }
   }
 
   function parsePaste() {
@@ -43,6 +114,7 @@ export default function NCSPage() {
       return
     }
     setParsed(rows)
+    setImportSource('pasted roster')
     toast(`Found ${rows.length} player${rows.length === 1 ? '' : 's'} — review below before importing`)
   }
 
@@ -66,6 +138,10 @@ export default function NCSPage() {
     const toAdd: Player[] = []
     let skipped = 0
 
+    const note = importSource && importSource !== 'pasted roster'
+      ? `Imported from NCS — ${importSource}`
+      : 'Imported from NCS'
+
     for (const row of parsed) {
       const name = row.name.trim()
       if (!name) continue
@@ -82,7 +158,7 @@ export default function NCSPage() {
         bats: row.bats.trim().toUpperCase() || 'R',
         throws: row.throws.trim().toUpperCase() || 'R',
         grad: row.grad.trim(),
-        notes: 'Imported from NCS',
+        notes: note,
       })
     }
 
@@ -94,6 +170,7 @@ export default function NCSPage() {
     update((prev) => ({ ...prev, players: [...prev.players, ...toAdd] }))
     setLastSync(new Date().toLocaleString())
     setParsed(null)
+    setImportSource('')
     setPasteText('')
     toast(
       `Imported ${toAdd.length} player${toAdd.length === 1 ? '' : 's'} to your roster${
@@ -113,59 +190,136 @@ export default function NCSPage() {
           </span>
         </div>
 
-        {/* Find Team + Import Roster */}
+        {/* Search NCS + Import Roster */}
         <Card>
           <CardHeader>
             <CardTitle>Import Roster from NCS</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-gray-500 mb-4">
-              NCS Fastpitch doesn&apos;t offer a connected API, so rosters are imported by copying the
-              roster table from your team&apos;s NCS page and pasting it here.
+              Search the NCS Fastpitch portal for your team and import its roster directly — no copy/paste required.
             </p>
 
             <div className="space-y-4">
-              {/* Step 1: find team */}
+              {/* Step 1: search */}
               <div>
                 <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5">
-                  Step 1 — Find your team in the NCS portal
+                  Step 1 — Search the NCS portal for your team
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <input
                     type="text"
-                    placeholder="Team name, e.g. Riverside SC 14U"
+                    placeholder="Team name, e.g. Texas Venom"
                     value={teamQuery}
                     onChange={(e) => setTeamQuery(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') searchTeams() }}
                     className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-primary"
                   />
-                  <Button variant="outline" size="sm" onClick={findTeam}>
-                    <Search className="h-4 w-4 mr-2" />Open NCS
+                  <select
+                    value={state}
+                    onChange={(e) => setState(e.target.value)}
+                    className="rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-primary bg-white"
+                  >
+                    <option value="">All states</option>
+                    {US_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                  {seasons.length > 0 && (
+                    <select
+                      value={seasonId}
+                      onChange={(e) => setSeasonId(e.target.value)}
+                      className="rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-primary bg-white"
+                    >
+                      <option value="">Current season</option>
+                      {seasons.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
+                    </select>
+                  )}
+                  <Button size="sm" onClick={searchTeams} disabled={searching}>
+                    {searching ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Search className="h-4 w-4 mr-2" />}
+                    Search NCS
                   </Button>
                 </div>
               </div>
 
-              {/* Step 2: paste roster */}
-              <div>
-                <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5">
-                  Step 2 — Paste the roster table from the NCS team page
+              {/* Step 2: results */}
+              {results && results.length > 0 && (
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5">
+                    Step 2 — Pick your team ({results.length} found)
+                  </div>
+                  <div className="overflow-x-auto rounded-lg border border-gray-200">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                          {['Team', 'Division', 'Location', 'W-L-T', ''].map((h) => (
+                            <th key={h} className="text-left font-medium text-gray-500 px-3 py-2">{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {results.map((team) => (
+                          <tr key={team.id} className="border-b border-gray-100 last:border-0">
+                            <td className="px-3 py-2 font-medium text-gray-900">
+                              <a href={team.url} target="_blank" rel="noopener noreferrer" className="hover:text-primary hover:underline">
+                                {team.name}
+                              </a>
+                            </td>
+                            <td className="px-3 py-2 text-gray-600">{team.division}</td>
+                            <td className="px-3 py-2 text-gray-600">
+                              <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5 text-gray-400" />{team.location}</span>
+                            </td>
+                            <td className="px-3 py-2 text-gray-600">{team.record}</td>
+                            <td className="px-3 py-2 text-right">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => importFromTeam(team)}
+                                disabled={loadingRosterId !== null}
+                              >
+                                {loadingRosterId === team.id
+                                  ? <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                  : <Download className="h-4 w-4 mr-2" />}
+                                Import Roster
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-                <textarea
-                  placeholder={'Paste roster here, e.g.\nName\tJersey\tPos\tBats\tThrows\tGrad\nEmma Torres\t12\tSS\tR\tR\t2027'}
-                  value={pasteText}
-                  onChange={(e) => setPasteText(e.target.value)}
-                  rows={6}
-                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-primary font-mono"
-                />
-                <Button size="sm" className="mt-2" onClick={parsePaste} disabled={!pasteText.trim()}>
-                  <ClipboardPaste className="h-4 w-4 mr-2" />Parse Roster
-                </Button>
+              )}
+
+              {/* Manual paste fallback */}
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setShowPaste((v) => !v)}
+                  className="text-xs font-medium text-gray-500 hover:text-primary"
+                >
+                  {showPaste ? '▾' : '▸'} Can&apos;t find your team? Paste the roster table manually
+                </button>
+                {showPaste && (
+                  <div className="mt-2">
+                    <textarea
+                      placeholder={'Paste roster here, e.g.\nName\tJersey\tPos\tBats\tThrows\tGrad\nEmma Torres\t12\tSS\tR\tR\t2027'}
+                      value={pasteText}
+                      onChange={(e) => setPasteText(e.target.value)}
+                      rows={5}
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-primary font-mono"
+                    />
+                    <Button size="sm" variant="outline" className="mt-2" onClick={parsePaste} disabled={!pasteText.trim()}>
+                      <ClipboardPaste className="h-4 w-4 mr-2" />Parse Pasted Roster
+                    </Button>
+                  </div>
+                )}
               </div>
 
               {/* Step 3: preview + confirm */}
               {parsed && (
                 <div>
                   <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1.5">
-                    Step 3 — Review before importing ({parsed.length} player{parsed.length === 1 ? '' : 's'})
+                    Step 3 — Review before importing ({parsed.length} player{parsed.length === 1 ? '' : 's'}
+                    {importSource && importSource !== 'pasted roster' ? ` from ${importSource}` : ''})
                   </div>
                   <div className="overflow-x-auto rounded-lg border border-gray-200">
                     <table className="w-full text-sm">
@@ -207,56 +361,10 @@ export default function NCSPage() {
                       <RefreshCw className="h-4 w-4 mr-2" />
                       Import {parsed.length} Player{parsed.length === 1 ? '' : 's'} to Roster
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => setParsed(null)}>Cancel</Button>
+                    <Button variant="outline" size="sm" onClick={() => { setParsed(null); setImportSource('') }}>Cancel</Button>
                   </div>
                 </div>
               )}
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="grid grid-cols-3 gap-4 max-w-sm">
-          <div className="rounded-xl border bg-white p-4 text-center">
-            <div className="text-2xl font-bold text-primary">#2</div>
-            <div className="text-xs text-gray-500">Regional Rank</div>
-          </div>
-          <div className="rounded-xl border bg-white p-4 text-center">
-            <div className="text-2xl font-bold text-green-600">25</div>
-            <div className="text-xs text-gray-500">Points</div>
-          </div>
-          <div className="rounded-xl border bg-white p-4 text-center">
-            <div className="text-2xl font-bold text-yellow-500">Top 5</div>
-            <div className="text-xs text-gray-500">Division</div>
-          </div>
-        </div>
-
-        <Card>
-          <CardHeader><CardTitle>U16 Elite Division Standings</CardTitle></CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="border-b border-gray-100">
-                  <tr>
-                    {['Rank', 'Team', 'W', 'L', 'Pts'].map((h) => (
-                      <th key={h} className="text-left font-medium text-gray-500 pb-2 pr-4">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {standings.map((s) => (
-                    <tr key={s.team} className={`border-b border-gray-50 ${s.us ? 'bg-primary-50' : ''}`}>
-                      <td className="py-2.5 pr-4 font-bold text-gray-700">#{s.rank}</td>
-                      <td className="py-2.5 pr-4">
-                        <span className={`font-medium ${s.us ? 'text-primary' : 'text-gray-900'}`}>{s.team}</span>
-                        {s.us && <Badge variant="default" className="ml-2 text-xs">Us</Badge>}
-                      </td>
-                      <td className="py-2.5 pr-4 text-green-600 font-medium">{s.wins}</td>
-                      <td className="py-2.5 pr-4 text-red-500">{s.losses}</td>
-                      <td className="py-2.5 font-bold text-gray-900">{s.points}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
             </div>
           </CardContent>
         </Card>
