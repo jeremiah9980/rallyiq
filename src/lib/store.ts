@@ -261,10 +261,14 @@ export function fundraisedTotal(f: Fundraiser): number {
 }
 
 export function useStore() {
-  const [store, setStore] = useState<Store>(() => {
-    if (typeof window === 'undefined') return { ...DEFAULT_STORE }
-    return loadRaw()
-  })
+  // Start from the default store on both server and first client render so the
+  // markup matches during hydration, then load any persisted state from
+  // localStorage in an effect (client-only) to avoid a hydration mismatch.
+  const [store, setStore] = useState<Store>(DEFAULT_STORE)
+
+  useEffect(() => {
+    setStore(loadRaw())
+  }, [])
 
   const update = useCallback((updater: (prev: Store) => Store) => {
     setStore((prev) => {
