@@ -25,6 +25,9 @@ export default function GameChangerPage() {
 
   const [opponent, setOpponent] = useState('')
   const [gameDate, setGameDate] = useState('')
+  const [result, setResult] = useState<Game['res']>('W')
+  const [usScore, setUsScore] = useState('')
+  const [themScore, setThemScore] = useState('')
   const [statsPaste, setStatsPaste] = useState('')
   const [statRows, setStatRows] = useState<GCStatRow[] | null>(null)
 
@@ -153,9 +156,9 @@ export default function GameChangerPage() {
       opp: opponent.trim(),
       loc: '',
       type: 'regular',
-      res: 'W',
-      us: 0,
-      them: 0,
+      res: result,
+      us: Number(usScore) || 0,
+      them: Number(themScore) || 0,
       notes: 'Imported from GameChanger',
       stats,
       source: 'gc',
@@ -166,6 +169,9 @@ export default function GameChangerPage() {
     setStatsPaste('')
     setOpponent('')
     setGameDate('')
+    setResult('W')
+    setUsScore('')
+    setThemScore('')
     toast(
       `Imported stats for ${matched} player${matched === 1 ? '' : 's'}${unmatched ? ` (${unmatched} unmatched — link their GameChanger ID first)` : ''}`,
       'success'
@@ -330,7 +336,7 @@ export default function GameChangerPage() {
               are matched to players by their linked GameChanger ID (or by name/jersey if not yet linked) and added
               to the Season Tracker — the same data shown in Roster and Athlete Profiles.
             </p>
-            <div className="grid grid-cols-2 gap-3 mb-3 max-w-md">
+            <div className="grid grid-cols-2 gap-3 mb-3 max-w-lg">
               <div>
                 <label className="text-xs text-gray-500 block mb-1">Opponent</label>
                 <input
@@ -350,9 +356,41 @@ export default function GameChangerPage() {
                   className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-primary"
                 />
               </div>
+              <div>
+                <label className="text-xs text-gray-500 block mb-1">Result</label>
+                <select
+                  value={result}
+                  onChange={(e) => setResult(e.target.value as Game['res'])}
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-primary"
+                >
+                  <option value="W">Win</option>
+                  <option value="L">Loss</option>
+                  <option value="T">Tie</option>
+                </select>
+              </div>
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <label className="text-xs text-gray-500 block mb-1">Our Score</label>
+                  <input
+                    type="number"
+                    value={usScore}
+                    onChange={(e) => setUsScore(e.target.value)}
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-primary"
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="text-xs text-gray-500 block mb-1">Their Score</label>
+                  <input
+                    type="number"
+                    value={themScore}
+                    onChange={(e) => setThemScore(e.target.value)}
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-primary"
+                  />
+                </div>
+              </div>
             </div>
             <textarea
-              placeholder={'Paste box score here, e.g.\nName\tAB\tH\t2B\t3B\tHR\tRBI\tR\tBB\tK\tSB\nKassidy Cargill\t3\t2\t1\t0\t0\t2\t1\t0\t0\t1'}
+              placeholder={'Paste box score here, e.g.\nName\tID\tAB\tH\t2B\t3B\tHR\tRBI\tR\tBB\tK\tSB\nKassidy Cargill\tGC-48213\t3\t2\t1\t0\t0\t2\t1\t0\t0\t1'}
               value={statsPaste}
               onChange={(e) => setStatsPaste(e.target.value)}
               rows={6}
@@ -371,7 +409,7 @@ export default function GameChangerPage() {
                   <table className="w-full text-sm">
                     <thead className="bg-gray-50 border-b border-gray-200">
                       <tr>
-                        {['Name', 'AB', 'H', '2B', '3B', 'HR', 'RBI', 'R', 'BB', 'K', 'SB', 'Match'].map((h) => (
+                        {['Name', 'GC ID', 'AB', 'H', '2B', '3B', 'HR', 'RBI', 'R', 'BB', 'K', 'SB', 'Match'].map((h) => (
                           <th key={h} className="text-left font-medium text-gray-500 px-2 py-2">{h}</th>
                         ))}
                       </tr>
@@ -381,7 +419,7 @@ export default function GameChangerPage() {
                         const player = matchStatRowToPlayer(row, players)
                         return (
                           <tr key={i} className="border-b border-gray-100 last:border-0">
-                            {(['name', 'ab', 'h', 'd', 't', 'hr', 'rbi', 'r', 'bb', 'k', 'sb'] as const).map((field) => (
+                            {(['name', 'gcId', 'ab', 'h', 'd', 't', 'hr', 'rbi', 'r', 'bb', 'k', 'sb'] as const).map((field) => (
                               <td key={field} className="px-1.5 py-1.5">
                                 <input
                                   value={row[field]}

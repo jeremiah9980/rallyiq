@@ -10,6 +10,7 @@ export interface GCRosterRow {
 export interface GCStatRow {
   name: string
   jersey: string
+  gcId: string
   ab: string
   h: string
   d: string
@@ -101,6 +102,7 @@ export function matchRosterToPlayers(rows: GCRosterRow[], players: Player[]): Ro
 const STAT_HEADER_KEYWORDS: Record<string, keyof GCStatRow> = {
   name: 'name', player: 'name', 'player name': 'name',
   '#': 'jersey', no: 'jersey', number: 'jersey', jersey: 'jersey',
+  id: 'gcId', playerid: 'gcId', 'gc id': 'gcId', gcid: 'gcId', 'player id': 'gcId',
   ab: 'ab', h: 'h', hits: 'h', '2b': 'd', double: 'd', doubles: 'd',
   '3b': 't', triple: 't', triples: 't', hr: 'hr', hrs: 'hr', 'home runs': 'hr',
   rbi: 'rbi', rbis: 'rbi', r: 'r', runs: 'r', bb: 'bb', walks: 'bb',
@@ -130,6 +132,7 @@ export function parseGCBoxScore(raw: string): GCStatRow[] {
     const row: GCStatRow = {
       name: colMap.name !== undefined ? cells[colMap.name] || '' : cells[0] || '',
       jersey: get('jersey'),
+      gcId: colMap.gcId !== undefined ? cells[colMap.gcId] || '' : '',
       ab: get('ab'),
       h: get('h'),
       d: get('d'),
@@ -147,9 +150,12 @@ export function parseGCBoxScore(raw: string): GCStatRow[] {
 }
 
 export function matchStatRowToPlayer(row: GCStatRow, players: Player[]): Player | null {
+  if (row.gcId.trim()) {
+    const player = players.find((p) => p.gcId && p.gcId.trim() === row.gcId.trim()) || null
+    if (player) return player
+  }
   const rowName = normalizeName(row.name)
-  let player = players.find((p) => p.gcId && normalizeName(p.name) === rowName) || null
-  if (!player) player = players.find((p) => normalizeName(p.name) === rowName) || null
+  let player = players.find((p) => normalizeName(p.name) === rowName) || null
   if (!player && row.jersey) {
     player = players.find((p) => p.jersey && p.jersey.trim() === row.jersey.trim()) || null
   }
