@@ -61,7 +61,7 @@ Requirements for this scaffold step:
           practice_plans,player_development,gamechanger_stats,social_media_hub,fundraising}
   integrations{ncs,gamechanger} publish{target,domain}
 - infra/.env.example with: DATABASE_URL, ANTHROPIC_API_KEY, NEXTAUTH_URL, NEXTAUTH_SECRET,
-  NCS_POLL_CRON, VERCEL_TOKEN.
+  EMAIL_SERVER, EMAIL_FROM, NCS_POLL_CRON, VERCEL_TOKEN.
 - Add a CI workflow (.github/workflows/ci.yml): pnpm install, typecheck, lint, build.
   In the build step set NEXTAUTH_URL fallback to http://localhost:3000 so next-auth doesn't
   crash on an empty URL.
@@ -177,7 +177,9 @@ same steps.
 Add next-auth (credentials + email) with org/team-scoped access. A coach belongs to an
 organization and sees only their TeamSeasons. Public-site reads are unauthenticated but only ever
 receive the published projection. Set NEXTAUTH_URL/NEXTAUTH_SECRET; ensure build doesn't crash on
-empty NEXTAUTH_URL.
+empty NEXTAUTH_URL. The email provider needs a configured sender/transport to send magic links —
+add EMAIL_SERVER (SMTP connection string) and EMAIL_FROM to the env contract alongside the
+existing vars, and wire next-auth's EmailProvider to them.
 ```
 
 ### 8 — Infra + deploy (`infra/`)
