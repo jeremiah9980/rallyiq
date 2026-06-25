@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useStore, uid, Game, GameStats } from '@/lib/store'
+import { useStore, uid, calcStats, Game, GameStats } from '@/lib/store'
 import { useToast } from '@/components/ui/Toast'
 import {
   LineChart,
@@ -40,8 +40,11 @@ export default function SeasonTrackerPage() {
   const t = games.filter(g => g.res === 'T').length
   const rs = games.reduce((s, g) => s + (g.us || 0), 0)
   const ra = games.reduce((s, g) => s + (g.them || 0), 0)
-  const totalAB = players.reduce((s, p) => s + (p.stats?.ab || 0), 0)
-  const totalH = players.reduce((s, p) => s + (p.stats?.h || 0), 0)
+  // Compute team totals from recorded games (same source as the per-player
+  // season stats and the GameChanger import) rather than the legacy
+  // Player.stats field, which imports never populate.
+  const totalAB = players.reduce((s, p) => s + calcStats(p.id, games).ab, 0)
+  const totalH = players.reduce((s, p) => s + calcStats(p.id, games).h, 0)
   const avgStr = totalAB > 0 ? (totalH / totalAB).toFixed(3).replace(/^0/, '') : '.000'
 
   const sorted = [...games].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
