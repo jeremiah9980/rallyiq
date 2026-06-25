@@ -94,8 +94,9 @@ version) must NEVER reach the public site renderer.
 ### 1 — Rally-OS Team Portal shell (`apps/rally-os`)
 ```
 Build the Team Portal dashboard shell. Left nav with these sections (from the product demo):
-Home, Standards, Team Info, Roster, Player Profiles, NCS Roster Dashboard, NCS Tournament Tracker,
-Integrations Hub, GameChanger, Coach, Player Development, Teams, Social Media Hub, Fundraising.
+Home, Standards, Team Info, Roster, Player Profiles, Practice Planning, NCS Roster Dashboard,
+NCS Tournament Tracker, Integrations Hub, GameChanger, Coach, Player Development, Teams,
+Social Media Hub, Fundraising.
 Home is a coach dashboard showing the active TeamSeason, athlete count, and a roster grid of
 player tiles with AVG/AB/RBI/HR computed live from core-data. Use packages/ui. Team Info +
 Standards are editable forms backed by these fields: team_name, season, age_group, organization,
@@ -152,11 +153,12 @@ Save every plan/drill into the reusable DrillLibrary / PracticeTemplate.
 Refactor the Venom team-site template into config-toggleable section modules. Public modules:
 home, team_info, standards, roster, player_profiles, social_media_hub, fundraising. ADD the
 Rally-IQ operational modules the Venom template is currently missing, in PUBLIC-SAFE form:
-schedule (approved games only), tournaments (NCS-tracked public view), practice_plans (PLAYER
-version only — never coach), player_development (public-safe dev view), gamechanger_stats
-(read-only imported stats + clips). Each module reads a PUBLISHED PROJECTION of core-data, never
-the operational record. integrations_status is internal-only and must never publish. Keep the dark
-neon Venom visual identity from packages/ui.
+coach (public staff/philosophy view, no private notes), schedule (approved games only),
+tournaments (NCS-tracked public view), practice_plans (PLAYER version only — never coach),
+player_development (public-safe dev view), gamechanger_stats (read-only imported stats + clips).
+Each module reads a PUBLISHED PROJECTION of core-data, never the operational record.
+integrations_status is internal-only and must never publish. Keep the dark neon Venom visual
+identity from packages/ui.
 ```
 
 ### 6 — Rally-Org-Builder deployment tool (`apps/org-builder` + `apps/public-site`)
