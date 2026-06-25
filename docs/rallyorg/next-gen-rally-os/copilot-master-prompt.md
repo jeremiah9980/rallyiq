@@ -57,8 +57,8 @@ Requirements for this scaffold step:
   in a dark neon style (deep purple/black background, lime-green + purple accents).
 - packages/config: a zod schema for SiteConfig matching this YAML shape:
   organization{name,slug} team{name,season,age_group}
-  modules{home,team_info,standards,roster,player_profiles,schedule,tournaments,
-          practice_plans,player_development,social_media_hub,fundraising}
+  modules{home,team_info,standards,coach,roster,player_profiles,schedule,tournaments,
+          practice_plans,player_development,gamechanger_stats,social_media_hub,fundraising}
   integrations{ncs,gamechanger} publish{target,domain}
 - infra/.env.example with: DATABASE_URL, ANTHROPIC_API_KEY, NEXTAUTH_URL, NEXTAUTH_SECRET,
   NCS_POLL_CRON, VERCEL_TOKEN.
@@ -191,5 +191,6 @@ criteria (Team Portal, NCS, GameChanger, Tournament Schedule, Practice Planning)
 ## Acceptance gate
 
 Each module is "done" only when it passes the matching section of the acceptance checklist in
-`RallyIQ_Documentation_Demo_Package.md §7`. Wire that checklist into `docs/` as living acceptance
-criteria and check items off as Copilot completes them.
+[`deployment-blueprint.md` §8](./deployment-blueprint.md#8-acceptance-checklist). Copy that
+checklist into the new repo's `docs/` as living acceptance criteria and check items off as
+Copilot completes them.

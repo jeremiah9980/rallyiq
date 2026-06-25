@@ -106,14 +106,16 @@ Team ──< TeamSeason ──< RosterEntry >── Player ──< PlayerProfile
                           └─ external mappings:
                                NcsTeamSource / NcsPlayerSource
                                NcsTournament / NcsTournamentGame / NcsChangeReview
-                               GameChangerTeamConnection (gc_team_id, per season)
-                               GameChangerPlayerMapping  (gc_player_id, per player)
+                               GameChangerTeamConnection (gcTeamId, per season)
+                               GameChangerPlayerMapping  (gcPlayerId, per player)
                                GameChangerStatSnapshot   (read-only)
 ```
 
-Durable cross-reference keys (carried forward from rallyiq, non-negotiable):
-- `gc_team_id` — per `TeamSeason`
-- `gc_player_id` — per `Player` (also the future key for per-player GameChanger clip scraping)
+Durable cross-reference keys (carried forward from rallyiq, non-negotiable). Field names match the
+Prisma camelCase convention used in `copilot-master-prompt.md` (map to snake_case DB columns via
+Prisma `@map` if needed):
+- `gcTeamId` — per `TeamSeason`
+- `gcPlayerId` — per `Player` (also the future key for per-player GameChanger clip scraping)
 - `ncs_player_source` / `ncs_team_source` — highest-priority match key for roster sync
 
 Match priority everywhere external rows meet local players: **external ID → normalized name → jersey**. Never name-only when an ID is present.
@@ -125,9 +127,9 @@ Match priority everywhere external rows meet local players: **external ID → no
 These were decided explicitly and the consolidated app must encode them — note they **differ by data type**, matching the demo voiceover:
 
 1. **NCS roster sync → coach-reviewed.** `ncs-worker` detects changes and creates a `NcsChangeReview` item (`change_detected → pending_review → accepted | ignored`). Rally-IQ never overwrites coach-managed roster data automatically.
-2. **GameChanger schedule push → coach-approved, never automatic.** NCS-detected tournament games become drafts (`ncs_detected → draft_created → pending_coach_approval → approved → pushed_to_gamechanger`). Only approved games push; Rally-IQ stores the returned `gc_game_id`.
+2. **GameChanger schedule push → coach-approved, never automatic.** NCS-detected tournament games become drafts (`ncs_detected → draft_created → pending_coach_approval → approved → pushed_to_gamechanger`). Only approved games push; Rally-IQ stores the returned `gcGameId`.
 
-> Note: an earlier rallyiq-only spec (`architecture-spec.md`) recorded a "fully automated" stance for the GameChanger push. The demo package voiceover and acceptance checklist supersede that with the **coach-approval-gated** flow above. Next-Gen-Rally-OS follows the demo package — approval-gated.
+> Note: an earlier rallyiq-only spec ([`architecture-spec.md`](../architecture-spec.md)) recorded a "fully automated" stance for the GameChanger push. The demo package voiceover and acceptance checklist (§8 below) supersede that with the **coach-approval-gated** flow above. Next-Gen-Rally-OS follows the demo package — approval-gated.
 
 ---
 
@@ -154,12 +156,14 @@ modules:
   home: true
   team_info: true
   standards: true
+  coach: true                    # public-safe staff/philosophy view
   roster: true
   player_profiles: true
   schedule: true
   tournaments: true
   practice_plans: true          # player version only on public site
   player_development: true       # public-safe view
+  gamechanger_stats: true        # read-only imported stats + clips
   social_media_hub: true
   fundraising: false
 integrations:
@@ -187,4 +191,44 @@ publish:
 7. `apps/org-builder` + `apps/public-site`: config → compose → preview → publish.
 8. `infra/`: env contracts, DB, cron, per-team deploy.
 
-Ship each layer behind the acceptance checklist in `RallyIQ_Documentation_Demo_Package.md §7`.
+Ship each layer behind the acceptance checklist in §8 below.
+
+---
+
+## 8. Acceptance checklist
+
+Carried over from the product demo package so it lives in-repo (not an external/uncommitted file). Each module in §7 is "done" only when its section here is checked.
+
+### Team Portal
+- [ ] Coach can open Team Portal.
+- [ ] Coach can view Home, Team Info, Standards, Roster, Player Profiles, NCS, GameChanger, and Practice Planning sections.
+
+### NCS
+- [ ] Coach can search NCS team.
+- [ ] Coach can preview roster.
+- [ ] Coach can import roster.
+- [ ] Rally-IQ continues monitoring NCS.
+- [ ] NCS changes create review items.
+
+### GameChanger
+- [ ] Coach can connect GameChanger.
+- [ ] Rally-IQ stores `gcTeamId`.
+- [ ] Coach can map players.
+- [ ] Rally-IQ stores `gcPlayerId`.
+- [ ] Rally-IQ imports stats.
+- [ ] Rally-IQ does not directly edit imported GameChanger stats in MVP.
+
+### Tournament Schedule
+- [ ] Rally-IQ detects NCS tournament registration.
+- [ ] Rally-IQ creates draft games.
+- [ ] Coach reviews games.
+- [ ] Coach approves selected games.
+- [ ] Approved games are pushed to GameChanger.
+- [ ] Rejected games are not pushed.
+
+### Practice Planning
+- [ ] Coach can create AI-assisted practice plan.
+- [ ] Rally-IQ generates coach version.
+- [ ] Rally-IQ generates player version.
+- [ ] Private coach notes are excluded from player version.
+- [ ] Plans can be saved into practice library.
