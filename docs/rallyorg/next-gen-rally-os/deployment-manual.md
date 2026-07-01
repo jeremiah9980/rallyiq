@@ -56,7 +56,7 @@ Keep one source-of-truth env file. Copy `infra/.env.example` → `.env` and fill
 > in the app directory (`apps/rally-os/.env`), and the **Prisma CLI** loads `.env` from the directory
 > it runs in. So the root `.env` won't reach `apps/rally-os` or Prisma by itself. Pick one:
 > - **Symlink** the root file into each consumer: `ln -s ../../.env apps/rally-os/.env` and
->   `ln -s ../../../.env packages/core-data/.env` (simplest; single source of truth), **or**
+>   `ln -s ../../.env packages/core-data/.env` (simplest; single source of truth), **or**
 > - add `import 'dotenv/config'` (with `dotenv-cli`/`dotenv -e ../../.env --` wrapping the scripts), **or**
 > - give each app its own `.env` copy.
 >
