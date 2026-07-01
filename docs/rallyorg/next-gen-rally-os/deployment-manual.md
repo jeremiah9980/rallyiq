@@ -49,7 +49,19 @@ Accounts you'll need: **Vercel** (app + site hosting), a **Postgres provider**, 
 
 ## 2. The environment contract
 
-One `.env` at the monorepo root drives every app (Turborepo passes it through). Copy `infra/.env.example` → `.env` and fill in:
+Keep one source-of-truth env file. Copy `infra/.env.example` → `.env` and fill in the values below.
+
+> **How env loading actually works:** Turborepo does **not** inject `.env` into task runtimes — it
+> only uses env vars for cache hashing. Each consumer loads its own: **Next.js** auto-loads a `.env`
+> in the app directory (`apps/rally-os/.env`), and the **Prisma CLI** loads `.env` from the directory
+> it runs in. So the root `.env` won't reach `apps/rally-os` or Prisma by itself. Pick one:
+> - **Symlink** the root file into each consumer: `ln -s ../../.env apps/rally-os/.env` and
+>   `ln -s ../../../.env packages/core-data/.env` (simplest; single source of truth), **or**
+> - add `import 'dotenv/config'` (with `dotenv-cli`/`dotenv -e ../../.env --` wrapping the scripts), **or**
+> - give each app its own `.env` copy.
+>
+> The commands in §3 assume you've done one of these so `DATABASE_URL`/`NEXTAUTH_URL`/`ANTHROPIC_API_KEY`
+> are actually visible to the app and to Prisma.
 
 ```bash
 # --- Database (Rally-OS system of record) ---
@@ -103,14 +115,16 @@ Log in with the seeded coach account (printed by the seed script). Confirm the T
    ```bash
    DATABASE_URL="<prod url>" pnpm --filter @rally/core-data db:migrate
    ```
-3. **Create the Vercel project** pointed at `apps/rally-os`:
+3. **Link the Vercel project** pointed at `apps/rally-os` — link only, do **not** deploy yet:
    ```bash
    cd apps/rally-os && vercel link
-   vercel --prod
    ```
    Set **Root Directory** = `apps/rally-os`, **Build Command** = `cd ../.. && pnpm --filter rally-os build`, **Install Command** = `pnpm install` at repo root.
-4. **Add all env vars** from §2 to the Vercel project (Production + Preview scopes). `NEXTAUTH_URL` = the deployed URL (e.g. `https://ops.rally.app`).
-5. Redeploy so env vars take effect.
+4. **Add all env vars** from §2 to the Vercel project (Production + Preview scopes) **before the first deploy**. `NEXTAUTH_URL` = the deployed URL (e.g. `https://ops.rally.app`). Skipping this step makes the *first* production build fail — `NEXTAUTH_URL` is empty and the login route crashes on `new URL('')`, and `DATABASE_URL` is missing.
+5. **Now deploy** — env is in place, so the first build succeeds:
+   ```bash
+   vercel --prod
+   ```
 
 ### 3.3 The NCS worker (companion to Rally-OS)
 
