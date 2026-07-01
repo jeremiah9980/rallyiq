@@ -7,6 +7,10 @@
 
 This manual takes you from a clean machine to a fully deployed, multi-team production system. It assumes the `jeremiah9980/Next-Gen-Rally-OS` monorepo has been scaffolded from Prompt 0.
 
+> **Note:** This document is authored in the `rallyiq` repo as a planning/handoff artifact, but every
+> path it references (`apps/*`, `packages/*`, `services/*`, `infra/.env.example`) lives in the future
+> `Next-Gen-Rally-OS` monorepo — **not** in this `rallyiq` checkout. Run these commands there, not here.
+
 ---
 
 ## 0. What each component is (read first)
